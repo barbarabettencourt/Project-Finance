@@ -1,11 +1,65 @@
 ---
 title: "Finance"
-author: "Barbara Bettencourt"
+author: "Barbara, Frederik, Sierra"
 date: "26/11/2021"
 output: pdf_document
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+```
+
+**Stocks:**
+Airlines:  
+Lufthansa (German); DLAKY    
+Scandinavian Airlines (Danish); SAS    
+Norwegian Air Shuttle (Norway); NWARF    
+Easy Jet (British); EZJ    
+RyanAir Holdings plc (British); RYAAY    
+United Airlines Holdings Inc (American); UAL    
+American Airlines Group Inc (American); AAL    
+Swiss Air (American) (coundnt find) 
+Spirit Airlines Inc (American); SAVE  
+
+Beer Industry:  
+Carlsberg (Danish); CABGY
+Heineken (Netherlands); HEINY  
+Anheuser-Busch InBev (Belgium); BUD  
+Harboe (Danish); CPH: HARB-B  
+Guinness from Diageo; DEO  
+Molson Coors Brewing; TAP
+Tsingtao Brewery Group; OTCMKTS: TSGTF
+Asahi Group Holding Ltd; OTCMKTS: ASBRF
+
+```{r include=FALSE}
+library(tidyquant)
+library(purrr)
+library(dplyr)
+library(tidyverse)
+
+options("getSymbols.warning4.0"=FALSE)
+options("getSymbols.yahoo.warning"=FALSE)
+```
+
+```{r}
+
+#example for stock of Lufthansa
+
+time <- today()-years(5)
+stocks.Lufthansa <- tq_get("DLAKY", get="stock.prices", from=time)
+
+#daily returns
+
+daily.Lufthansa <- stocks.Lufthansa %>% tq_transmute(select = adjusted, mutate_fun = periodReturn, period = "daily", col_rename = "daily_returns")
+
+head(daily.Lufthansa)
+
+#monthly returns
+
+monthly.Lufthansa <- stocks.Lufthansa %>%
+  tq_transmute(select = adjusted, mutate_fun = periodReturn, period = "monthly", col_rename = "monthly_returns")
+
+head(monthly.Lufthansa)
+
 ```
 
