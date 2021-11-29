@@ -18,7 +18,6 @@ Easy Jet (British); EZJ
 RyanAir Holdings plc (British); RYAAY    
 United Airlines Holdings Inc (American); UAL    
 American Airlines Group Inc (American); AAL    
-Swiss Air (American) (coundnt find) 
 Spirit Airlines Inc (American); SAVE  
 
 Beer Industry:  
@@ -39,6 +38,47 @@ library(tidyverse)
 
 options("getSymbols.warning4.0"=FALSE)
 options("getSymbols.yahoo.warning"=FALSE)
+
+tickers <- c('DLAKY',
+             'SAS',
+             'NWARF',
+             'EZJ',
+             'RYAAY',
+             'UAL',
+             'AAL',
+             'SAVE',
+             'CABGY',
+             'HEINY',
+             'BUD',
+             'HARB-B.CO',
+             'DEO',
+             'TAP',
+             'TSGTF',
+             'ASBRF'
+)
+
+stock_names <- c(
+  'luft',
+  'SAS',
+  'norwegian',
+  'Easy',
+  'RyanAir',
+  'United',
+  'American',
+  'Sprit',
+  'Carlsberg',
+  'Heineken',
+  'AB',
+  'Harboe',
+  'Guinness',
+  'Molson',
+  'Tsingtao',
+  'Asahi'
+)
+
+stocks <- data.frame(tickers = tickers,
+                stockname = stock_names)
+
 ```
 
 ```{r}
@@ -50,7 +90,8 @@ stocks.Lufthansa <- tq_get("DLAKY", get="stock.prices", from=time)
 
 #daily returns
 
-daily.Lufthansa <- stocks.Lufthansa %>% tq_transmute(select = adjusted, mutate_fun = periodReturn, period = "daily", col_rename = "daily_returns")
+daily.Lufthansa <- stocks.Lufthansa %>% 
+  tq_transmute(select = adjusted, mutate_fun = periodReturn, period = "daily", col_rename = "daily_returns")
 
 head(daily.Lufthansa)
 
@@ -61,5 +102,19 @@ monthly.Lufthansa <- stocks.Lufthansa %>%
 
 head(monthly.Lufthansa)
 
+
 ```
 
+```{r}
+
+returns <- tq_get(tickers, get="stock.prices") %>%
+  group_by(symbol) %>%
+  tq_transmute(select=adjusted,
+               mutate_fun=periodReturn,
+               period="daily",
+               col_rename = "daily_return")
+
+returns <- returns %>% 
+  pivot_wider(names_from = symbol, values_from = daily_return)
+
+```
