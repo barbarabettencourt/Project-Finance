@@ -113,8 +113,8 @@ returns <- tq_get(tickers, get="stock.prices") %>%
   group_by(symbol) %>%
   tq_transmute(select=adjusted,
                mutate_fun=periodReturn,
-               period="daily",
-               col_rename = "daily_return")
+               period="monthly",
+               col_rename = "monthly_return")
 
 returns <- returns %>% 
   pivot_wider(names_from = symbol, values_from = daily_return)
@@ -134,7 +134,6 @@ for (i in 12:length(returns)){
 stationary_pval <- rep(0, length(returns)-1) #Adjust for date column
 for (i in 2:length(returns)) { 
   stationary_pval <- kpss.test(pull(returns[,i]), null='Trend')$p.value
-  
 }
 
 
@@ -175,19 +174,12 @@ plot(sdP,muP,type="l",xlim=c(0,2.5),ylim=c(0,0.15),lty=3) #Plotting the efficien
 
 mu_rf = 3/365 #The risk free rate
 points(0,mu_rf,cex=3,col="blue",pch="*") #Showing the risk free asset
-
 sharperatio =(muP-mu_rf)/sdP #Computing sharpe ratios
-
 ind = (sharperatio == max(sharperatio)) #Finds the maximum sharperatio, which locates the Tangent Portfolio
-
 lines(c(0,sdP[ind]),c(mu_rf,muP[ind]),col="red",lwd=3)  #Showing line of optimal portfolio
-
 points(sdP[ind],muP[ind],col="red",cex=4,pch="*") #The Tangent portfolio
-
 ind2 = (sdP == min(sdP)) #The minimum sharpe ratio is the min variance port
-
 points(sdP[ind2],muP[ind2],col="green",cex=2,pch="*") #Plotting the min variance 
-
 ind3 = (muP > muP[ind2]) #All portfolios with in efficient frontier
 lines(sdP[ind3],muP[ind3],type="l",xlim=c(0,0.25),
       ylim=c(0,0.3),col="red",lwd=3) #Efficient frontier 
