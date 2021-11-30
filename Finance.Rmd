@@ -35,12 +35,14 @@ library(tidyquant)
 library(purrr)
 library(dplyr)
 library(tidyverse)
+library(Hmisc)
+library(reshape)
+library(tseries)
 
 options("getSymbols.warning4.0"=FALSE)
 options("getSymbols.yahoo.warning"=FALSE)
 
 tickers <- c('DLAKY',
-             'SAS',
              'NWARF',
              'EZJ',
              'RYAAY',
@@ -59,7 +61,6 @@ tickers <- c('DLAKY',
 
 stock_names <- c(
   'luft',
-  'SAS',
   'norwegian',
   'Easy',
   'RyanAir',
@@ -116,5 +117,24 @@ returns <- tq_get(tickers, get="stock.prices") %>%
 
 returns <- returns %>% 
   pivot_wider(names_from = symbol, values_from = daily_return)
+
+```
+***Part 1 ***
+
+```{r}
+#Summary
+summary(returns)
+hist.data.frame(returns[2:length(returns)])
+
+for (i in 12:length(returns)){ 
+  boxplot(returns[,i], ylim=c(-0.2, 0.25), main=colnames(returns)[i]) 
+}
+
+stationary_pval <- rep(0, length(returns)-1) #Adjust for date column
+for (i in 2:length(returns)) { 
+  stationary_pval <- kpss.test(pull(returns[,i]), null='Trend')$p.value
+  
+}
+
 
 ```
