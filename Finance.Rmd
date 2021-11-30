@@ -12,7 +12,6 @@ knitr::opts_chunk$set(echo = TRUE)
 **Stocks:**
 Airlines:  
 Lufthansa (German); DLAKY    
-Scandinavian Airlines (Danish); SAS    
 Southwest Airlines; LUV   
 Easy Jet (British); EZJ    
 RyanAir Holdings plc (British); RYAAY    
@@ -31,6 +30,7 @@ Tsingtao Brewery Group; OTCMKTS: TSGTF
 Asahi Group Holding Ltd; OTCMKTS: ASBRF
 
 ```{r include=FALSE}
+
 library(tidyquant)
 library(purrr)
 library(dplyr)
@@ -39,12 +39,17 @@ library(Hmisc)
 library(reshape)
 library(tseries)
 library(quadprog)
+library(DescTools)
+
+```
+
+
+```{r include=FALSE}
 
 options("getSymbols.warning4.0"=FALSE)
 options("getSymbols.yahoo.warning"=FALSE)
 
 tickers <- c(
-              'ICEAIR',
               'DLAKY',
              'LUV',
              'EZJ',
@@ -63,14 +68,13 @@ tickers <- c(
 )
 
 stock_names <- c(
-  'iceland',
-  'luft',
+  'Lufthansa',
   'Southwest',
-  'Easy',
+  'EasyJet',
   'RyanAir',
   'United',
   'American',
-  'Sprit',
+  'Spirit',
   'Carlsberg',
   'Heineken',
   'AB',
@@ -126,9 +130,70 @@ returns <- returns %>%
 returns <- returns[1:131,]
 
 ```
-***Part 1 ***
+
+***Part 1***
+1. Table of mean, sd, skewness, kurtosis and beta.   
 
 ```{r}
+# columns
+
+returns <- as.data.frame(returns)
+Company <- stock_names
+Means <- rep(NA, 15)
+Sd <- rep(NA,15)
+Skewness <- rep(NA,15)
+Kurtosis <- rep(NA,15)
+table <- data.frame(Company,Means,Sd,Skewness,Kurtosis)
+
+# means
+
+for(i in 2:16)
+  {
+    table$Means[i-1] <- mean(na.omit(returns[,i]))
+  }
+
+# sd
+
+for(i in 2:16)
+  {
+    table$Sd[i-1] <- sd(na.omit(returns[,i]))
+  }
+
+# skewness should be around 0 to be normally distributed
+
+for(i in 2:16)
+  {
+    table$Skewness[i-1] <- Skew(na.omit(returns[,i]))
+  }
+
+# kurtosis should be around 3 to be normally distributed
+
+for(i in 2:16)
+  {
+    table$Kurtosis[i-1] <- Kurt(na.omit(returns[,i]))
+  }
+
+table
+```
+
+
+```{r}
+
+#1) Table of mean, sd, skewnees, kurtosis and beta 
+#2) Plot each set of returns
+#3) Plot equity curve
+#4) Histograms for each return series
+#5) Boxplots for each return series
+#6) qqplots for each return series
+#7) Run tests for stationarity
+#8) Check if returns are normally distributed
+
+
+
+
+
+
+
 #Summary
 summary(returns)
 hist.data.frame(returns[2:length(returns)])
