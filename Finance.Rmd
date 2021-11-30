@@ -38,6 +38,7 @@ library(tidyverse)
 library(Hmisc)
 library(reshape)
 library(tseries)
+library(quadprog)
 
 options("getSymbols.warning4.0"=FALSE)
 options("getSymbols.yahoo.warning"=FALSE)
@@ -135,6 +136,73 @@ for (i in 2:length(returns)) {
   stationary_pval <- kpss.test(pull(returns[,i]), null='Trend')$p.value
   
 }
+
+
+```
+
+
+```{r}
+
+returns_df <- returns[2:length(returns)]
+mean_return = colMeans(returns_df,na.rm=TRUE) #Finding the mean return of each stock
+covariance_mat = cov(returns_df) #Finding the covariance of the stocks
+std_vector = sqrt(diag(covariance_mat)) #Finding the std. of the covariance matrix
+
+M = length(returns_df) #The number of stocks included in this analysis, in this case 6
+
+#Setting up environment, following the changes made at page 479
+Amat = cbind(rep(1,M),mean_vect,diag(1,nrow=M),-diag(1,nrow=M)) #The Constraint matrix
+muP = seq(min(mean_return)+.001,max(mean_return)-.001,length=15)  #Possible means
+
+sdP = muP  #Standard deviation for portfolio
+
+weights = matrix(0,nrow=300,ncol=M) #The weights
+
+for (i in 1:length(muP))
+{
+  #Assuring that the weights follow the requirement
+  bvec = c(1,muP[i],rep(0,M),rep(0,M)) #Following the example on page 479. 
+  result = solve.QP(Dmat=covariance_mat,
+             dvec=rep(0,M), 
+             Amat=Amat,
+             bvec=bvec, 
+             meq=2) #Finds the min. variance portfolio for every MuP. Creating the efficient frontier.
+  
+  sdP[i] = sqrt(result$value) #Saving results
+  weights[i,] = result$solution  #Saving weights
+}
+plot(sdP,muP,type="l",xlim=c(0,2.5),ylim=c(0,0.15),lty=3) #Plotting the efficient frontier
+
+mu_rf = 3/365 #The risk free rate
+points(0,mu_rf,cex=3,col="blue",pch="*") #Showing the risk free asset
+
+sharperatio =(muP-mu_rf)/sdP #Computing sharpe ratios
+
+ind = (sharperatio == max(sharperatio)) #Finds the maximum sharperatio, which locates the Tangent Portfolio
+
+lines(c(0,sdP[ind]),c(mu_rf,muP[ind]),col="red",lwd=3)  #Showing line of optimal portfolio
+
+points(sdP[ind],muP[ind],col="red",cex=4,pch="*") #The Tangent portfolio
+
+ind2 = (sdP == min(sdP)) #The minimum sharpe ratio is the min variance port
+
+points(sdP[ind2],muP[ind2],col="green",cex=2,pch="*") #Plotting the min variance 
+
+ind3 = (muP > muP[ind2]) #All portfolios with in efficient frontier
+lines(sdP[ind3],muP[ind3],type="l",xlim=c(0,0.25),
+      ylim=c(0,0.3),col="red",lwd=3) #Efficient frontier 
+
+#plotting all the single stoks
+text(sd_vect[1],mean_vect[1],"Stock: GM")
+text(sd_vect[2],mean_vect[2],"Stock: F")
+text(sd_vect[3],mean_vect[3],"Stock: UTX")
+text(sd_vect[4],mean_vect[4],"Stock: CAT")
+text(sd_vect[5],mean_vect[5],"Stock: MRK")
+text(sd_vect[6],mean_vect[6],"Stock: IBM")
+
+
+#Problem 2
+
 
 
 ```
