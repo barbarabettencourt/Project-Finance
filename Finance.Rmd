@@ -43,7 +43,9 @@ library(quadprog)
 options("getSymbols.warning4.0"=FALSE)
 options("getSymbols.yahoo.warning"=FALSE)
 
-tickers <- c('DLAKY',
+tickers <- c(
+              'ICEAIR',
+              'DLAKY',
              'NWARF',
              'EZJ',
              'RYAAY',
@@ -61,6 +63,7 @@ tickers <- c('DLAKY',
 )
 
 stock_names <- c(
+  'iceland',
   'luft',
   'norwegian',
   'Easy',
@@ -117,7 +120,7 @@ returns <- tq_get(tickers, get="stock.prices") %>%
                col_rename = "monthly_return")
 
 returns <- returns %>% 
-  pivot_wider(names_from = symbol, values_from = daily_return)
+  pivot_wider(names_from = symbol, values_from = monthly_return)
 
 ```
 ***Part 1 ***
@@ -136,7 +139,6 @@ for (i in 2:length(returns)) {
   stationary_pval <- kpss.test(pull(returns[,i]), null='Trend')$p.value
 }
 
-
 ```
 
 
@@ -150,7 +152,7 @@ std_vector = sqrt(diag(covariance_mat)) #Finding the std. of the covariance matr
 M = length(returns_df) #The number of stocks included in this analysis, in this case 6
 
 #Setting up environment, following the changes made at page 479
-Amat = cbind(rep(1,M),mean_vect,diag(1,nrow=M),-diag(1,nrow=M)) #The Constraint matrix
+Amat = cbind(rep(1,M),mean_return,diag(1,nrow=M),-diag(1,nrow=M)) #The Constraint matrix
 muP = seq(min(mean_return)+.001,max(mean_return)-.001,length=15)  #Possible means
 
 sdP = muP  #Standard deviation for portfolio
