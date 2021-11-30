@@ -13,7 +13,7 @@ knitr::opts_chunk$set(echo = TRUE)
 Airlines:  
 Lufthansa (German); DLAKY    
 Scandinavian Airlines (Danish); SAS    
-Norwegian Air Shuttle (Norway); NWARF    
+Southwest Airlines; LUV   
 Easy Jet (British); EZJ    
 RyanAir Holdings plc (British); RYAAY    
 United Airlines Holdings Inc (American); UAL    
@@ -46,7 +46,7 @@ options("getSymbols.yahoo.warning"=FALSE)
 tickers <- c(
               'ICEAIR',
               'DLAKY',
-             'NWARF',
+             'LUV',
              'EZJ',
              'RYAAY',
              'UAL',
@@ -65,7 +65,7 @@ tickers <- c(
 stock_names <- c(
   'iceland',
   'luft',
-  'norwegian',
+  'Southwest',
   'Easy',
   'RyanAir',
   'United',
@@ -122,6 +122,9 @@ returns <- tq_get(tickers, get="stock.prices") %>%
 returns <- returns %>% 
   pivot_wider(names_from = symbol, values_from = monthly_return)
 
+#monthly
+returns <- returns[1:131,]
+
 ```
 ***Part 1 ***
 
@@ -130,7 +133,7 @@ returns <- returns %>%
 summary(returns)
 hist.data.frame(returns[2:length(returns)])
 
-for (i in 12:length(returns)){ 
+for (i in 2:length(returns)){ 
   boxplot(returns[,i], ylim=c(-0.2, 0.25), main=colnames(returns)[i]) 
 }
 
