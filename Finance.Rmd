@@ -40,6 +40,10 @@ library(reshape)
 library(tseries)
 library(quadprog)
 library(DescTools)
+library(ggplot2)
+library(reshape2)
+library(car)
+library(tseries)
 
 ```
 
@@ -87,30 +91,6 @@ stock_names <- c(
 
 stocks <- data.frame(tickers = tickers,
                 stockname = stock_names)
-
-```
-
-```{r}
-
-#example for stock of Lufthansa
-
-time <- today()-years(5)
-stocks.Lufthansa <- tq_get("DLAKY", get="stock.prices", from=time)
-
-#daily returns
-
-daily.Lufthansa <- stocks.Lufthansa %>% 
-  tq_transmute(select = adjusted, mutate_fun = periodReturn, period = "daily", col_rename = "daily_returns")
-
-head(daily.Lufthansa)
-
-#monthly returns
-
-monthly.Lufthansa <- stocks.Lufthansa %>%
-  tq_transmute(select = adjusted, mutate_fun = periodReturn, period = "monthly", col_rename = "monthly_returns")
-
-head(monthly.Lufthansa)
-
 
 ```
 
@@ -173,39 +153,146 @@ for(i in 2:16)
     table$Kurtosis[i-1] <- Kurt(na.omit(returns[,i]))
   }
 
+# betas need risk free and market portfolio
+
 table
 ```
 
+2. Plot each set of returns  
+
+```{r}
+returns <- as.data.frame(returns)
+
+for (i in 1:15)
+{
+  names <- list(stock_names)
+  print(ggplot(returns, aes(x=date, y=returns[,i+1])) +
+  geom_line(color="steelblue") + 
+  geom_point() +
+  xlab("") +
+  ylab(names[[1]][i])) 
+}
+
+```
+3. Plot equity curve  
+https://bookdown.org/compfinezbook/introcompfinr/ReturnCalculationsR.html#
 
 ```{r}
 
-#1) Table of mean, sd, skewnees, kurtosis and beta 
-#2) Plot each set of returns
-#3) Plot equity curve
-#4) Histograms for each return series
-#5) Boxplots for each return series
-#6) qqplots for each return series
-#7) Run tests for stationarity
-#8) Check if returns are normally distributed
+returnsNA <- as.data.frame(na.omit(returns))   #doesn't work with NA values
 
-
-
-
-
-
-
-#Summary
-summary(returns)
-hist.data.frame(returns[2:length(returns)])
-
-for (i in 2:length(returns)){ 
-  boxplot(returns[,i], ylim=c(-0.2, 0.25), main=colnames(returns)[i]) 
+equityCurve <- as.data.frame(matrix(c(rep(NA,113*15)), nrow= 113)) 
+for (i in 1:15) 
+{  
+  equityCurve[,i] <- cumprod(1 + returnsNA[,i+1]) 
 }
 
-stationary_pval <- rep(0, length(returns)-1) #Adjust for date column
-for (i in 2:length(returns)) { 
-  stationary_pval <- kpss.test(pull(returns[,i]), null='Trend')$p.value
+
+equityCurve <- cbind(returnsNA[,1], equityCurve)
+colnames(equityCurve)[1] <- "date"
+
+#airlines 7
+for (i in 1:7)
+{
+  names <- list(stock_names)
+  print(ggplot(equityCurve, aes(x=date, y=equityCurve[,i+1])) +
+  ggtitle("Equity Curve") +         
+  geom_line(color="steelblue") + 
+  xlab("") +
+  ylab(names[[1]][i]))  
 }
+
+#beers
+for (i in 1:8)
+{
+  names <- list(stock_names)
+  print(ggplot(equityCurve, aes(x=date, y=equityCurve[,i+7])) +
+  ggtitle("Equity Curve") + 
+  geom_line(color="steelblue") + 
+  xlab("") +
+  ylab(names[[1]][i+7]))  
+}
+
+#need to add legends
+
+#airlines
+plot(equityCurve[,1], equityCurve[,2], type = "l", ylim= c(0.2,6), xlab="", ylab="Equity Curves", main="Airlines")
+for(i in 1:6)
+{
+  lines(equityCurve[,1], equityCurve[,i+2], type = "l", col = i+1)
+}
+
+#beers
+plot(equityCurve[,1], equityCurve[,9], type = "l", ylim= c(0.4,3), xlab="", ylab="Equity Curves", main="Beers")
+for(i in 1:7)
+{
+  lines(equityCurve[,1], equityCurve[,i+9], type = "l", col = i+1)
+}
+
+```
+
+4. Histograms for each return series  
+
+```{r}
+
+for (i in 1:15)
+{
+  names <- list(stock_names)
+  hist(returns[,i+1], xlab="", main = names[[1]][i])
+}
+
+```
+5. Boxplots for each return series  
+
+```{r}
+
+#individual boxplots
+
+for (i in 1:15)
+{
+  names <- list(stock_names)
+  boxplot(returns[,i+1], xlab="", main = names[[1]][i])
+}
+
+#maybe try in ggplot make it look better
+
+#airlines
+boxplot(returns[,2:8])
+
+#beers
+boxplot(returns[,8:16])
+
+```
+
+6. qqplots for each return series  
+
+```{r}
+
+for (i in 1:15)
+{
+  qqPlot(returns[,i+1], main = names[[1]][i])
+}
+
+```
+
+7. Run tests for stationarity  
+
+```{r}
+#null hypothesis is series is non stationary
+
+#for (i in 1:15)
+#{
+ #adf.test(ts(returns[,i+3]))
+#}
+
+
+```
+
+8. Check if returns are normally distributed
+
+```{r}
+
+
 
 ```
 
