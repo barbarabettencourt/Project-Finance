@@ -335,8 +335,7 @@ and comment of your results. You should do the same for S&P 500 and compare it w
 assets.
 
 ```{r}
-#x <- getURL("https://raw.github.com/aronlindberg/latent_growth_classes/master/LGC_data.csv")
-#y <- read.csv(text = x)
+
 
 ```
 
