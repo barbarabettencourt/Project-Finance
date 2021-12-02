@@ -45,6 +45,7 @@ library(reshape2)
 library(car)
 library(tseries)
 library(gridExtra)
+library(RCurl)
 
 ```
 
@@ -154,7 +155,7 @@ for(i in 2:16)
     table$Kurtosis[i-1] <- Kurt(na.omit(returns[,i]))
   }
 
-# betas need risk free and market portfolio
+# betas 
 
 table
 ```
@@ -334,6 +335,8 @@ and comment of your results. You should do the same for S&P 500 and compare it w
 assets.
 
 ```{r}
+#x <- getURL("https://raw.github.com/aronlindberg/latent_growth_classes/master/LGC_data.csv")
+#y <- read.csv(text = x)
 
 ```
 
