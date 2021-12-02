@@ -171,7 +171,9 @@ for (i in 1:15)
   geom_line(color="steelblue") + 
   geom_point() +
   xlab("") +
-  ylab(names[[1]][i])) 
+  ylab(names[[1]][i])+
+  ggtitle("Plot of Returns") + 
+  theme(plot.title = element_text(hjust = 0.5))) 
 }
 
 ```
@@ -197,7 +199,8 @@ for (i in 1:7)
 {
   names <- list(stock_names)
   print(ggplot(equityCurve, aes(x=date, y=equityCurve[,i+1])) +
-  ggtitle("Equity Curve") +         
+  ggtitle("Equity Curve") +
+  theme(plot.title = element_text(hjust = 0.5))+  
   geom_line(color="steelblue") + 
   xlab("") +
   ylab(names[[1]][i]))  
@@ -209,6 +212,7 @@ for (i in 1:8)
   names <- list(stock_names)
   print(ggplot(equityCurve, aes(x=date, y=equityCurve[,i+7])) +
   ggtitle("Equity Curve") + 
+  theme(plot.title = element_text(hjust = 0.5)) +  
   geom_line(color="steelblue") + 
   xlab("") +
   ylab(names[[1]][i+7]))  
@@ -217,7 +221,7 @@ for (i in 1:8)
 #need to add legends
 
 #airlines
-plot(equityCurve[,1], equityCurve[,2], type = "l", ylim= c(0.2,6), xlab="", ylab="Equity Curves", main="Airlines")
+plot(equityCurve[,1], equityCurve[,2], type = "l", ylim= c(0.2,6), xlab="", ylab="Airlines", main="Equity Curves of Airlines")
 for(i in 1:6)
 {
   lines(equityCurve[,1], equityCurve[,i+2], type = "l", col = i+1)
@@ -226,7 +230,7 @@ legend(x='topleft', legend=names[[1]][1:7],col=1:7, lty=1, cex=0.8)
 
 
 #beers
-plot(equityCurve[,1], equityCurve[,9], type = "l", ylim= c(0.4,3), xlab="", ylab="Equity Curves", main="Beers")
+plot(equityCurve[,1], equityCurve[,9], type = "l", ylim= c(0.4,3), xlab="", ylab="Beers", main="Equity Curves of Beers")
 for(i in 1:7)
 {
   lines(equityCurve[,1], equityCurve[,i+9], type = "l", col = i+1)
@@ -242,7 +246,12 @@ legend(x='topleft', legend=names[[1]][8:15],col=1:7, lty=1, cex=0.8)
 for (i in 1:15)
 {
   names <- list(stock_names)
-  hist(returns[,i+1], xlab="", main = names[[1]][i])
+  print(ggplot(returnsNA, aes(x=returnsNA[,i+1])) +
+  geom_histogram(aes(y=..density..), colour="black", fill="white") + 
+  geom_density(alpha=.2, fill="#FF6666")+ 
+  xlab("") +
+  ggtitle(names[[1]][i])+
+  theme(plot.title = element_text(hjust = 0.5)))  
 }
 
 
@@ -289,11 +298,14 @@ for (i in 1:15)
 ```{r}
 #null hypothesis is series is non stationary
 
-#for (i in 1:15)
-#{
- #adf.test(ts(returns[,i+3]))
-#}
+for (i in 1:15)
+{
+ print(adf.test(returnsNA[,i+1]))
+}
 
+#all pvalues are less than 0.01 and so p-value<0.05 hence we reject the null hypothesis and conclude that there is enough evidence to conclude that the returns are stationary
+
+#graphically we can see that all the returns have no trends and the oscillations between the returns seem to be at a constant width, so constant deviation. All pointing towards stationarity.
 
 ```
 
@@ -301,7 +313,18 @@ for (i in 1:15)
 
 ```{r}
 
+#From the histograms the returns appear to have the normal distribution shape, where most of them appear unimodal. There appears to be a few that are skewewd, which can also be observed in the boxplots.
+#Looking at the qqplots we can see a few of the returns have values outside the interval which means they are not normally distributed. 
+#lastly we do the Shapiro test
+#null hypothesis: normal 
 
+for (i in 1:15)
+{
+ print(shapiro.test(returnsNA[,i+1]))
+}
+
+#normal <- 1,2,3,4,9,10,12,14,8 barelly with 0.05991
+#not normal <- 5,6,7,11,13,15
 
 ```
 
