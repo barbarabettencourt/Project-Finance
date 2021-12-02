@@ -44,6 +44,7 @@ library(ggplot2)
 library(reshape2)
 library(car)
 library(tseries)
+library(gridExtra)
 
 ```
 
@@ -221,6 +222,8 @@ for(i in 1:6)
 {
   lines(equityCurve[,1], equityCurve[,i+2], type = "l", col = i+1)
 }
+legend(x='topleft', legend=names[[1]][1:7],col=1:7, lty=1, cex=0.8)
+
 
 #beers
 plot(equityCurve[,1], equityCurve[,9], type = "l", ylim= c(0.4,3), xlab="", ylab="Equity Curves", main="Beers")
@@ -228,6 +231,7 @@ for(i in 1:7)
 {
   lines(equityCurve[,1], equityCurve[,i+9], type = "l", col = i+1)
 }
+legend(x='topleft', legend=names[[1]][8:15],col=1:7, lty=1, cex=0.8)
 
 ```
 
@@ -240,6 +244,7 @@ for (i in 1:15)
   names <- list(stock_names)
   hist(returns[,i+1], xlab="", main = names[[1]][i])
 }
+
 
 ```
 5. Boxplots for each return series  
@@ -254,13 +259,16 @@ for (i in 1:15)
   boxplot(returns[,i+1], xlab="", main = names[[1]][i])
 }
 
-#maybe try in ggplot make it look better
+
+returnsbox <- returns
+colnames(returnsbox)[2:16] <- names[[1]]
+colors <- c('cadetblue1', 'coral', 'darkolivegreen1', 'lightgoldenrod1')
 
 #airlines
-boxplot(returns[,2:8])
+boxplot(returnsbox[,2:8], col = colors, main= "Boxplots of Airlines")
 
 #beers
-boxplot(returns[,8:16])
+boxplot(returnsbox[,8:16], col= colors, main = "Boxplots of Beers")
 
 ```
 
@@ -272,6 +280,7 @@ for (i in 1:15)
 {
   qqPlot(returns[,i+1], main = names[[1]][i])
 }
+
 
 ```
 
