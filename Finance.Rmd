@@ -45,6 +45,7 @@ library(reshape2)
 library(car)
 library(tseries)
 library(gridExtra)
+library(RCurl)
 
 ```
 
@@ -119,12 +120,12 @@ returns <- returns[1:131,]
 # columns
 
 returns <- as.data.frame(returns)
-Company <- stock_names
+Stocks <- stock_names
 Means <- rep(NA, 15)
 Sd <- rep(NA,15)
 Skewness <- rep(NA,15)
 Kurtosis <- rep(NA,15)
-table <- data.frame(Company,Means,Sd,Skewness,Kurtosis)
+table <- data.frame(Stocks,Means,Sd,Skewness,Kurtosis)
 
 # means
 
@@ -154,7 +155,7 @@ for(i in 2:16)
     table$Kurtosis[i-1] <- Kurt(na.omit(returns[,i]))
   }
 
-# betas need risk free and market portfolio
+# betas 
 
 table
 ```
@@ -325,6 +326,52 @@ for (i in 1:15)
 
 #normal <- 1,2,3,4,9,10,12,14,8 barelly with 0.05991
 #not normal <- 5,6,7,11,13,15
+
+```
+
+9.You should also provide an equity curve for each asset (that is, a
+curve that shows the growth of a $1 in each of the asset over the time period you chose)
+and comment of your results. You should do the same for S&P 500 and compare it with the
+assets.
+
+```{r}
+
+
+```
+
+10. Fit different distributions to your data, which one fits better?
+
+```{r}
+
+```
+
+11.  Compute Sharpe’s slope for each asset. Which asset has the highest slope?
+
+```{r}
+
+```
+
+12. Convert the monthly sample means
+into annual estimates by multiplying by 12 and convert the monthly sample SDs into annual
+estimates by multiplying by the square root of 12. Comment on the values of these annual
+numbers.
+
+```{r}
+
+```
+
+13. Construct pairwise scatter plots between your assets returns and comment on
+any relationships you see.
+
+```{r}
+
+```
+
+14. You should also compute the sample covariance matrix of the
+returns on your assets and comment on the direction of linear association between the asset
+returns.
+
+```{r}
 
 ```
 
