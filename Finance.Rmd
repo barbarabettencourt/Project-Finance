@@ -186,13 +186,15 @@ airlines <- returns %>%
 ggplot(airlines, aes(x = date, y = Returns)) + 
   geom_line(aes(color = Stocks)) + 
   scale_color_manual(values = c("skyblue4", "orchid1")) +
+  geom_hline(yintercept=0,linetype="dashed", alpha=0.5)+
+  geom_vline(xintercept = as.Date("2020-01-31"), linetype="dashed", alpha=0.5) +
   ggtitle("Plot of Returns of United Airlines and American Airlines") +
   theme(plot.title = element_text(hjust = 0.5)) +
   xlab("")
 
 rm(airlines)
 
-#carslberg, harbo, asahi
+#carslberg, asahi
 
 beers <- returns %>%
          select(date, CABGY, ASBRF ) %>%
@@ -201,10 +203,14 @@ beers <- returns %>%
 ggplot(beers, aes(x = date, y = Returns)) + 
   geom_line(aes(color = Stocks)) + 
   scale_color_manual(values = c("skyblue4", "orchid1")) +
+  geom_hline(yintercept=0,linetype="dashed", alpha=0.5)+
+  geom_vline(xintercept = as.Date("2020-01-31"), linetype="dashed", alpha=0.5) +
   ggtitle("Plot of Returns of Carlsberg and Asahi") +
   theme(plot.title = element_text(hjust = 0.5)) +
   xlab("")
 
+
+rm(beers)
 ```
 3. Plot equity curve  
 https://bookdown.org/compfinezbook/introcompfinr/ReturnCalculationsR.html#
@@ -255,6 +261,7 @@ for(i in 1:6)
 {
   lines(equityCurve[,1], equityCurve[,i+2], type = "l", col = i+1)
 }
+abline(v=as.Date("2020-01-31"), lty=2, col="dimgrey")
 legend(x='topleft', legend=names[[1]][1:7],col=1:7, lty=1, cex=0.8)
 
 
@@ -264,7 +271,9 @@ for(i in 1:7)
 {
   lines(equityCurve[,1], equityCurve[,i+9], type = "l", col = i+1)
 }
+abline(v=as.Date("2020-01-31"), lty=2, col="dimgrey")
 legend(x='topleft', legend=names[[1]][8:15],col=1:7, lty=1, cex=0.8)
+
 
 ```
 
