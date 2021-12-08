@@ -111,7 +111,7 @@ returns <- tq_get(tickers, get="stock.prices") %>%
 returns <- returns %>% 
   pivot_wider(names_from = symbol, values_from = monthly_return)
 
-#monthly
+#monthly returns
 returns <- returns[1:131,]
 
 ```
@@ -120,8 +120,7 @@ returns <- returns[1:131,]
 1. Table of mean, sd, skewness, kurtosis and beta.   
 
 ```{r}
-# columns
-
+# columns of table
 returns <- as.data.frame(returns)
 returnsIVV <- returns[1:16]
 Stocks <- stock_names[1:15]
@@ -181,7 +180,7 @@ for (i in 1:15)
   theme(plot.title = element_text(hjust = 0.5))) 
 }
 
-#united airlines american airlines
+#united airlines and american airlines
 
 airlines <- returns %>%
             select(date, UAL, AAL) %>%
@@ -198,7 +197,7 @@ ggplot(airlines, aes(x = date, y = Returns)) +
 
 rm(airlines)
 
-#carslberg, asahi
+#carslberg and asahi
 
 beers <- returns %>%
          select(date, CABGY, ASBRF ) %>%
@@ -276,7 +275,7 @@ for(i in 1:7)
   lines(equityCurve[,1], equityCurve[,i+9], type = "l", col = i+1)
 }
 abline(v=as.Date("2020-01-31"), lty=2, col="dimgrey")
-legend(x='topleft', legend=names[[1]][8:15],col=1:7, lty=1, cex=0.8)
+legend(x='topleft', legend=names[[1]][8:15],col=1:8, lty=1, cex=0.8)
 
 
 ```
