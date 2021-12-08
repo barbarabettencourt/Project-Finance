@@ -406,12 +406,14 @@ for (i in 1:15)
   BIC_t[i] = 2 * fit_t$value + log(n) * 3  
 }
 
-#standard t no 
+#standard t 
+#works: 1,2,3,4,5,6,7,8,9,10,12,13,14,15
+#not work: 11
 
 AIC_std <- c(rep(NA), 15)
 BIC_std <- c(rep(NA), 15)
 
-for (i in 1:15) 
+for (i in 1:10) 
 {
   x <- diff(returnsNA[,i+1])
   n = length(x)
@@ -422,13 +424,25 @@ for (i in 1:15)
   BIC_std[i] = 2*fit_std$value + log(n) * 3
 }
 
+for (i in 1:4) 
+{
+  x <- diff(returnsNA[,i+12])
+  n = length(x)
+  start = c(mean(x), sd(x), 5)
+  loglik_std = function(beta) sum(- dstd(x, mean = beta[1], sd = beta[2], nu = beta[3], log = TRUE))
+  fit_std = optim(start, loglik_std, hessian = T, method = "L-BFGS-B", lower = c(-0.1, 0.01, 2.1))
+  AIC_std[i+11] = 2*fit_std$value +2*3
+  BIC_std[i+11] = 2*fit_std$value + log(n) * 3
+}
 
-#skewed t no
+#skewed t
+#works: 1,2,3,4,5,6,7,8,9,10,11,12,13,15
+#not work: 14 
 
 AIC_sstd <- c(rep(NA), 15)
 BIC_sstd <- c(rep(NA), 15)
 
-for (i in 1:15)
+for (i in 1:13)
 {  
   x <- diff(returnsNA[,i+1])
   n = length(x)
@@ -438,6 +452,14 @@ for (i in 1:15)
   AIC_sstd[i] = 2*fit_sstd$value + 2 * 4
   BIC_sstd[i]= 2*fit_sstd$value + log(n) * 4
 }
+
+  x <- diff(returnsNA[,16])
+  n = length(x)
+  loglik_sstd = function(beta) sum(- dsstd(x, mean = beta[1], sd = beta[2], nu = beta[3], xi = beta[4], log = TRUE))
+  start = c(mean(x), sd(x), 5, 1)
+  fit_sstd = optim(start, loglik_sstd, hessian = T, method = "L-BFGS-B", lower = c(-0.1, 0.01, 2.1, -2))
+  AIC_sstd[15] = 2*fit_sstd$value + 2 * 4
+  BIC_sstd[15]= 2*fit_sstd$value + log(n) * 4
 
 #ged yes
 
@@ -472,10 +494,12 @@ BIC_n[i] = 2 * fit_n$value + log(n) * 3
 }
 
 ########################
-table <- data.frame(AIC_t,AIC_ged,AIC_n,BIC_t,BIC_ged,BIC_n)
-table <- cbind(Stocks, table)
 
+table <- data.frame(AIC_t,AIC_std,AIC_sstd,AIC_ged,AIC_n,BIC_t,BIC_std,BIC_sstd,BIC_ged,BIC_n)
+table <- cbind(Stocks, table)
 table
+
+#lufthannsa sstd
 ```
 
 10.  Compute Sharpe’s slope for each asset. Which asset has the highest slope?
