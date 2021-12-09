@@ -47,6 +47,11 @@ library(tseries)
 library(gridExtra)
 library(RCurl)
 library(readr)
+library(QRM)
+library("Ecdat")
+library("fGarch")
+library(copula)
+
 
 ```
 
@@ -111,7 +116,7 @@ returns <- tq_get(tickers, get="stock.prices") %>%
 returns <- returns %>% 
   pivot_wider(names_from = symbol, values_from = monthly_return)
 
-#monthly
+#monthly returns
 returns <- returns[1:131,]
 
 ```
@@ -120,10 +125,12 @@ returns <- returns[1:131,]
 1. Table of mean, sd, skewness, kurtosis and beta.   
 
 ```{r}
-# columns
 
 returns <- as.data.frame(returns)
+returnsNA <- as.data.frame(na.omit(returns))
 returnsIVV <- returns[1:16]
+
+# columns of table
 Stocks <- stock_names[1:15]
 Means <- rep(NA, 15)
 Sd <- rep(NA,15)
@@ -131,32 +138,33 @@ Skewness <- rep(NA,15)
 Kurtosis <- rep(NA,15)
 table <- data.frame(Stocks,Means,Sd,Skewness,Kurtosis)
 
+
 # means
 
-for(i in 2:16)
+for(i in 1:15)
   {
-    table$Means[i-1] <- mean(na.omit(returns[,i]))
+    table$Means[i] <- mean(returnsNA[,i+1])
   }
 
 # sd
 
-for(i in 2:16)
+for(i in 1:15)
   {
-    table$Sd[i-1] <- sd(na.omit(returns[,i]))
+    table$Sd[i] <- sd(returnsNA[,i+1])
   }
 
 # skewness should be around 0 to be normally distributed
 
-for(i in 2:16)
+for(i in 1:15)
   {
-    table$Skewness[i-1] <- Skew(na.omit(returns[,i]))
+    table$Skewness[i] <- Skew(returnsNA[,i+1])
   }
 
 # kurtosis should be around 3 to be normally distributed
 
-for(i in 2:16)
+for(i in 1:15)
   {
-    table$Kurtosis[i-1] <- Kurt(na.omit(returns[,i]))
+    table$Kurtosis[i] <- Kurt(returnsNA[,i+1])
   }
 
 # betas 
@@ -181,7 +189,7 @@ for (i in 1:15)
   theme(plot.title = element_text(hjust = 0.5))) 
 }
 
-#united airlines american airlines
+#united airlines and american airlines
 
 airlines <- returns %>%
             select(date, UAL, AAL) %>%
@@ -198,7 +206,7 @@ ggplot(airlines, aes(x = date, y = Returns)) +
 
 rm(airlines)
 
-#carslberg, asahi
+#carslberg and asahi
 
 beers <- returns %>%
          select(date, CABGY, ASBRF ) %>%
@@ -276,7 +284,7 @@ for(i in 1:7)
   lines(equityCurve[,1], equityCurve[,i+9], type = "l", col = i+1)
 }
 abline(v=as.Date("2020-01-31"), lty=2, col="dimgrey")
-legend(x='topleft', legend=names[[1]][8:15],col=1:7, lty=1, cex=0.8)
+legend(x='topleft', legend=names[[1]][8:15],col=1:8, lty=1, cex=0.8)
 
 
 ```
@@ -385,8 +393,94 @@ for (i in 1:15)
 
 ```{r}
 
+#t distribution
 
+AIC_t <- c(rep(NA), 15)
+BIC_t <- c(rep(NA), 15)
+  
+for (i in 1:15) 
+{
+  x <- diff(returnsNA[,i+1])
+  n = length(x)
+  start = c(mean(x), sd(x), 5)
+  loglik_t = function(beta) sum( - dt((x - beta[1]) / beta[2], beta[3], log = TRUE) + log(beta[2]) )
+  fit_t = optim(start, loglik_t, hessian = T, method = "L-BFGS-B", lower = c(-1, 0.001, 1))
+  AIC_t[i] = 2 * fit_t$value + 2 * 3
+  BIC_t[i] = 2 * fit_t$value + log(n) * 3  
+}
 
+#skewed student t
+#not work: Harboe=11 
+
+AIC_sstd <- c(rep(NA), 15)
+BIC_sstd <- c(rep(NA), 15)
+
+for (i in 1:10)
+{  
+  x <- diff(returnsNA[,i+1])
+  n = length(x)
+  loglik_sstd = function(beta) sum(- dsstd(x, mean = beta[1], sd = beta[2], nu = beta[3], xi = beta[4], log = TRUE))
+  start = c(mean(x), sd(x), 5, 1)
+  fit_sstd = optim(start, loglik_sstd, hessian = T, method = "L-BFGS-B", lower = c(-0.1, 0.01, 2.1, -2))
+  AIC_sstd[i] = 2*fit_sstd$value + 2 * 4
+  BIC_sstd[i]= 2*fit_sstd$value + log(n) * 4
+}
+
+for (i in 1:4)
+{  
+  x <- diff(returnsNA[,i+12])
+  n = length(x)
+  loglik_sstd = function(beta) sum(- dsstd(x, mean = beta[1], sd = beta[2], nu = beta[3], xi = beta[4], log = TRUE))
+  start = c(mean(x), sd(x), 5, 1)
+  fit_sstd = optim(start, loglik_sstd, hessian = T, method = "L-BFGS-B", lower = c(-0.1, 0.01, 2.1, -2))
+  AIC_sstd[i+11] = 2*fit_sstd$value + 2 * 4
+  BIC_sstd[i+11]= 2*fit_sstd$value + log(n) * 4
+}
+
+#ged 
+
+AIC_ged <- c(rep(NA), 15)
+BIC_ged <- c(rep(NA), 15)
+
+for (i in 1:15)
+{
+x <- diff(returnsNA[,i+1])
+n = length(x)
+loglik_ged = function(beta) sum( - dged(x,mean=beta[1],sd=beta[2],nu=beta[3],log=TRUE) )
+start = c(mean(x),sd(x),1)
+fit_ged = optim(start,loglik_ged,hessian=T,method="L-BFGS-B",lower = c(-.1,.01,1))
+AIC_ged[i] = 2*fit_ged$value+2*4
+BIC_ged[i] = 2*fit_ged$value+log(n)*4
+}
+
+#normal 
+AIC_n <- c(rep(NA), 15)
+BIC_n <- c(rep(NA), 15)
+
+for (i in 1:15)
+{
+x <- diff(returnsNA[,i+1])
+n = length(x)
+start = c(mean(x),sd(x),1)
+loglik_n = function(beta) sum( - dnorm(x,mean=beta[1],sd=beta[2],log=TRUE) )
+fit_n = optim(start, loglik_n, hessian = T,
+method = "L-BFGS-B", lower = c(-1, 0.001, 1))
+AIC_n[i] = 2 * fit_n$value + 2 * 3
+BIC_n[i] = 2 * fit_n$value + log(n) * 3
+}
+
+########################
+
+table <- data.frame(AIC_t,AIC_sstd,AIC_ged,AIC_n,BIC_t,BIC_sstd,BIC_ged,BIC_n)
+table <- cbind(Stocks, table)
+table
+
+AIC_result <- c("Skewed Sd t", "t Dist", "Ged", "Skewed Sd t", "t Dist", "t Dist", "t Dist", "Skewed Sd t", "t Dist", "t Dist", "Normal", "Skewed Sd t", "Skewed Sd t", "Normal", "t Dist")
+BIC_result <- c("t Dist","t Dist","t Dist","t Dist","t Dist","t Dist","t Dist","t Dist","t Dist","t Dist","Normal","t Dist","t Dist","Normal","t Dist")
+
+table <- cbind(table, AIC_result, BIC_result)
+colnames(table)[2:11] <- c("t AIC", "Skewed t AIC", "Ged AIC", "Normal AIC", "t BIC", "Skewed t BIC", "Ged BIC", "Normal BIC", "Best AIC", "Best BIC")
+table
 ```
 
 10.  Compute Sharpe’s slope for each asset. Which asset has the highest slope?
@@ -395,6 +489,19 @@ return on a portfolio and $\mu_f$ is the risk-free rate, then
 Sharpe's slope = $\frac{(E(R_P)-\mu_f)}{\sigma_{Rp}}$
 
 ```{r}
+riskfree <- 0.04
+
+SharpesSlope <- rep(NA,15)
+
+for (i in 1:15) 
+{
+  SharpesSlope[i] <- (mean(returnsNA[,i+1]) - riskfree)/sd(returnsNA[,i+1])
+}
+
+#If the analysis results in a negative Sharpe ratio, it either means the risk-free rate is greater than the portfolio's return, or the portfolio's return is expected to be negative. In either case, a negative Sharpe ratio does not convey any useful meaning.
+
+SharpesSlope
+max(SharpesSlope) #highest slope
 
 ```
 
@@ -402,8 +509,13 @@ Sharpe's slope = $\frac{(E(R_P)-\mu_f)}{\sigma_{Rp}}$
 numbers.
 
 ```{r}
+#?
 
 annualsamplemeans <- returns[,2:16] *12
+
+
+annualsamplesd <- sd(returns[,2:16])*sqrt(12)
+
 
 
 ```
@@ -412,8 +524,11 @@ annualsamplemeans <- returns[,2:16] *12
 any relationships you see.
 
 ```{r}
-pairs(returns)
+#airlines
+pairs(returns[,2:8], main="Scatterplot of Airline Returns")
 
+#beers
+pairs(returns[,9:16], main="Scatterplot of Beer Returns")
 ```
 
 13. You should also compute the sample covariance matrix of the
