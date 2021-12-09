@@ -29,6 +29,8 @@ Molson Coors Brewing; TAP
 Tsingtao Brewery Group; OTCMKTS: TSGTF
 Asahi Group Holding Ltd; OTCMKTS: ASBRF
 
+**Descriptive Analysis**
+
 ```{r include=FALSE}
 
 library(tidyquant)
@@ -577,6 +579,45 @@ Correlations <- as.data.frame(cor(returnsNA[2:16]))
 Correlationsair <- Correlations[1:7,1:7]
 Correlationsbeers <- Correlations[8:15,8:15]
 
+
+```
+
+
+**PCA**
+
+```{r}
+library(ggfortify)
+
+#all stocks
+
+pca = prcomp(returnsNA[,2:16], scale = TRUE)
+
+#pc1 and pc2
+autoplot(pca, data=returnsNA[,2:16], loadings=TRUE, loadings.label=TRUE) + ggtitle("1st and 2nd Principal Components of the 15 stocks") + theme(plot.title = element_text(hjust = 0.5))
+
+#pc2 and pc3
+autoplot(pca, data=returnsNA[,2:16], loadings=TRUE, loadings.label=TRUE, x=2, y=3) + ggtitle("2nd and 3rd Principal Components of the 15 stocks") + theme(plot.title = element_text(hjust = 0.5))
+
+#airlines
+
+pca = prcomp(returnsNA[,2:8], scale = TRUE)
+
+#pc1 and pc2
+autoplot(pca, data=returnsNA[,2:8], loadings=TRUE, loadings.label=TRUE)+ ggtitle("1st and 2nd Principal Components of the Airline stocks") + theme(plot.title = element_text(hjust = 0.5))
+
+#pc2 and pc3
+autoplot(pca, data=returnsNA[,2:8], loadings=TRUE, loadings.label=TRUE, x=2, y=3)+ ggtitle("2nd and 3rd Principal Components of the Airline stocks") + theme(plot.title = element_text(hjust = 0.5))
+
+
+#beers
+
+pca = prcomp(returnsNA[,9:16], scale = TRUE)
+
+#pc1 and pc2
+autoplot(pca, data=returnsNA[,9:16], loadings=TRUE, loadings.label=TRUE)+ ggtitle("1st and 2nd Principal Components of the Beer stocks") + theme(plot.title = element_text(hjust = 0.5))
+
+#pc2 and pc3
+autoplot(pca, data=returnsNA[,9:16], loadings=TRUE, loadings.label=TRUE, x=2, y=3)+ggtitle("2nd and 3rd Principal Components of the Beer stocks") + theme(plot.title = element_text(hjust = 0.5))
 
 ```
 
