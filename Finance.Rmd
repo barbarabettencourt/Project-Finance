@@ -265,28 +265,6 @@ for (i in 1:8)
   ylab(names[[1]][i+7]))  
 }
 
-#need to add legends
-
-#airlines
-plot(equityCurve[,1], equityCurve[,2], type = "l", ylim= c(0.2,6), xlab="", ylab="Airlines", main="Equity Curves of Airlines")
-for(i in 1:6)
-{
-  lines(equityCurve[,1], equityCurve[,i+2], type = "l", col = i+1)
-}
-abline(v=as.Date("2020-01-31"), lty=2, col="dimgrey")
-legend(x='topleft', legend=names[[1]][1:7],col=1:7, lty=1, cex=0.8)
-
-
-#beers
-plot(equityCurve[,1], equityCurve[,9], type = "l", ylim= c(0.4,3), xlab="", ylab="Beers", main="Equity Curves of Beers")
-for(i in 1:7)
-{
-  lines(equityCurve[,1], equityCurve[,i+9], type = "l", col = i+1)
-}
-abline(v=as.Date("2020-01-31"), lty=2, col="dimgrey")
-legend(x='topleft', legend=names[[1]][8:15],col=1:8, lty=1, cex=0.8)
-
-
 ```
 You should also provide an equity curve for each asset (that is, a
 curve that shows the growth of a $1 in each of the asset over the time period you chose)
@@ -295,7 +273,38 @@ assets.
 
 ```{r}
 
-returns
+equityCurveSP <- cumprod(1 + returnsNA[,17])
+
+namesair <- names[[1]][1:7]
+namesair <- append(namesair, "SP500")
+
+colors <- c(1,2,3,4,5,6,7,1)
+lt <- c(1,1,1,1,1,1,1,2)
+
+#airlines
+plot(equityCurve[,1], equityCurve[,2], type = "l", ylim= c(0.2,6), xlab="", ylab="Airlines", main="Equity Curves of Airlines")
+for(i in 1:6)
+{
+  lines(equityCurve[,1], equityCurve[,i+2], type = "l", col = i+1)
+}
+lines(equityCurve[,1],equityCurveSP,type="l", lty=2, lwd=1, col="black")
+abline(v=as.Date("2020-01-31"), lty=2, col="dimgrey")
+legend(x='topleft', legend=namesair,col=colors, lty=lt, cex=0.8)
+
+####################################################################
+
+colors <- c(1,2,3,4,5,6,7,8,1)
+lt <- c(1,1,1,1,1,1,1,1,2)
+
+#beers
+plot(equityCurve[,1], equityCurve[,9], type = "l", ylim= c(0.4,3), xlab="", ylab="Beers", main="Equity Curves of Beers")
+for(i in 1:7)
+{
+  lines(equityCurve[,1], equityCurve[,i+9], type = "l", col = i+1)
+}
+lines(equityCurve[,1],equityCurveSP,type="l", lty=2, lwd=1, col="black")
+abline(v=as.Date("2020-01-31"), lty=2, col="dimgrey")
+legend(x='topleft', legend=names[[1]][8:16],col=colors, lty=lt, cex=0.8)
 
 ```
 
@@ -511,10 +520,10 @@ numbers.
 ```{r}
 #?
 
-annualsamplemeans <- returns[,2:16] *12
+#annualsamplemeans <- returns[,2:16] *12
 
 
-annualsamplesd <- sd(returns[,2:16])*sqrt(12)
+#annualsamplesd <- sd(returns[,2:16])*sqrt(12)
 
 
 
@@ -572,7 +581,7 @@ Correlationsbeers <- Correlations[8:15,8:15]
 ```
 
 
-```{r}
+```{r eval=FALSE, include=FALSE}
 
 returns_df <- returns[2:length(returns)]
 mean_return = colMeans(returns_df,na.rm=TRUE) #Finding the mean return of each stock
