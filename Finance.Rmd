@@ -598,6 +598,8 @@ autoplot(pca, data=returnsNA[,2:16], loadings=TRUE, loadings.label=TRUE) + ggtit
 #pc2 and pc3
 autoplot(pca, data=returnsNA[,2:16], loadings=TRUE, loadings.label=TRUE, x=2, y=3) + ggtitle("2nd and 3rd Principal Components of the 15 stocks") + theme(plot.title = element_text(hjust = 0.5))
 
+summary(pca)
+
 #airlines
 
 pca = prcomp(returnsNA[,2:8], scale = TRUE)
@@ -608,6 +610,7 @@ autoplot(pca, data=returnsNA[,2:8], loadings=TRUE, loadings.label=TRUE)+ ggtitle
 #pc2 and pc3
 autoplot(pca, data=returnsNA[,2:8], loadings=TRUE, loadings.label=TRUE, x=2, y=3)+ ggtitle("2nd and 3rd Principal Components of the Airline stocks") + theme(plot.title = element_text(hjust = 0.5))
 
+summary(pca)
 
 #beers
 
@@ -619,7 +622,19 @@ autoplot(pca, data=returnsNA[,9:16], loadings=TRUE, loadings.label=TRUE)+ ggtitl
 #pc2 and pc3
 autoplot(pca, data=returnsNA[,9:16], loadings=TRUE, loadings.label=TRUE, x=2, y=3)+ggtitle("2nd and 3rd Principal Components of the Beer stocks") + theme(plot.title = element_text(hjust = 0.5))
 
+summary(pca)
 ```
+**Factor Models**
+
+```{r}
+
+fit <- factanal(x=returnsNA[2:16], factors = 2)
+fit
+
+#loadings are betahat transpose
+#uniquenesses: the diagonal elements of the estimate bigsigma.hat_epsilon
+```
+
 
 
 ```{r eval=FALSE, include=FALSE}
