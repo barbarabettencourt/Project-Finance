@@ -1,0 +1,68 @@
+# Risk Management
+100,000
+VaR(0.05)
+ES
+over one month
+normal dist
+estimated means and vars
+do nonparametric additionally
+comment: highest lowest VaR and ES assets
+bootstrap to estimate se and 95% CI for VaR(0.05) and ES
+
+```{r}
+# read data
+data = read.csv('data.csv')
+dim(data)
+head(data)
+stock_names <- c(
+  'Lufthansa',
+  'Southwest',
+  'EasyJet',
+  'RyanAir',
+  'United',
+  'American',
+  'Spirit',
+  'Carlsberg',
+  'Heineken',
+  'AB',
+  'Harboe',
+  'Guinness',
+  'Molson',
+  'Tsingtao',
+  'Asahi',
+  'SP500'
+)
+```
+
+```{r}
+# param VaR and ES functions on normal distribution
+VaR_norm = function(s0, mu, sigma, alpha) {
+    return( -s0 + sigma * qnorm(alpha) )
+}
+
+ES_norm = function(s0, mu, sigma, alpha) {
+    return( -s0 * ( -mu + sigma * ( pnorm( qnorm(alpha) ) / alpha ) ) )
+}
+```
+
+```{r}
+# estimate mean and sd
+mean_vec = rep(NA, dim(data)[2] - 2)
+sd_vec = rep(NA, dim(data)[2] - 2)
+for (i in 1:(dim(data)[2] - 2)) {
+    mean_vec[i] = mean(na.omit(data[, i + 2]))
+    sd_vec[i] = sd(na.omit(data[, i + 2]))
+}
+```
+
+```{r}
+# VaR, ES for assets
+VaR_norm_ls = list()
+ES_norm_ls = list()
+for (i in 1:(dim(data)[2] - 2)) {
+    name = stock_names[i]
+    VaR_norm_ls[[name]] = VaR_norm(100000, mean_vec[i], sd_vec[i], 0.05)
+    ES_norm_ls[[name]] = ES_norm(100000, mean_vec[i], sd_vec[i], 0.05)
+}
+```
+
