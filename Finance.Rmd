@@ -1,6 +1,6 @@
 ---
-  title: "Finance"
-author: "Barbara, Frederik, Sierra"
+  title: "Descriptive Analasys and PCA"
+author: "Barbara Bettencourt"
 date: "26/11/2021"
 output: pdf_document
 ---
@@ -52,11 +52,12 @@ library(readr)
 library(QRM)
 library("Ecdat")
 library("fGarch")
-library(copula)
+
 
 
 ```
 
+This is how we collected the original data, however, somehow some of the Asahi returns disappeared, so we use the data.csv file (the original data).
 
 ```{r include=FALSE}
 
@@ -108,20 +109,30 @@ stocks <- data.frame(tickers = tickers,
 
 ```{r}
 
-returns <- tq_get(tickers, get="stock.prices") %>%
+returns1 <- tq_get(tickers, get="stock.prices") %>%
   group_by(symbol) %>%
   tq_transmute(select=adjusted,
                mutate_fun=periodReturn,
                period="monthly",
                col_rename = "monthly_return")
 
-returns <- returns %>% 
+returns1 <- returns1 %>% 
   pivot_wider(names_from = symbol, values_from = monthly_return)
 
 #monthly returns
-returns <- returns[1:131,]
+returns1 <- returns1[1:131,]
 
 ```
+
+```{r}
+returns3 <- read.csv('https://raw.githubusercontent.com/barbarabettencourt/Project-Finance/main/data/data.csv')
+returns3 <- returns3[2:17]
+
+returns1[,2:16] <- returns3[,2:16]
+
+returns <- returns1
+```
+
 
 ***Part 1***
   1. Table of mean, sd, skewness, kurtosis and beta.   
@@ -130,7 +141,6 @@ returns <- returns[1:131,]
 
 returns <- as.data.frame(returns)
 returnsNA <- as.data.frame(na.omit(returns))
-returnsIVV <- returns[1:16]
 
 # columns of table
 Stocks <- stock_names[1:15]
@@ -138,7 +148,8 @@ Means <- rep(NA, 15)
 Sd <- rep(NA,15)
 Skewness <- rep(NA,15)
 Kurtosis <- rep(NA,15)
-table <- data.frame(Stocks,Means,Sd,Skewness,Kurtosis)
+Betas <- rep(NA,15)
+table <- data.frame(Stocks,Means,Sd,Skewness,Kurtosis,Betas)
 
 
 # means
@@ -170,19 +181,36 @@ for(i in 1:15)
 }
 
 # betas 
-#cAPM model, risk free and market portfolio IVV
+#riskfree rate is 0.45
+
+risk.free <- rep(0.45,113)
+
+regressions <- vector("list",15)
+
+for (i in 1:15) 
+{
+  regressions[[i]] <- lm((returnsNA[,i+1]-risk.free)~(returnsNA[,17]-risk.free))  
+}
+
+regressions[[3]][[1]][2]
+
+
+for(i in 1:15)
+{
+  table$Betas[i] <- regressions[[i]][[1]][2]
+}
+
 table
 ```
 
 2. Plot each set of returns  
 
 ```{r}
-returns <- as.data.frame(returns)
 
 for (i in 1:15)
 {
   names <- list(stock_names)
-  print(ggplot(returns, aes(x=date, y=returns[,i+1])) +
+  print(ggplot(returns1, aes(x=date, y=returns[,i+1])) +
           geom_line(color="steelblue") + 
           geom_point() +
           xlab("") +
@@ -214,7 +242,7 @@ beers <- returns %>%
   select(date, CABGY, ASBRF ) %>%
   gather(key="Stocks", value = "Returns", -date)
 
-ggplot(beers, aes(x = date, y = Returns)) + 
+ggplot(beers, aes(x = date, y = Returns, group=1)) + 
   geom_line(aes(color = Stocks)) + 
   scale_color_manual(values = c("skyblue4", "orchid1")) +
   geom_hline(yintercept=0,linetype="dashed", alpha=0.5)+
@@ -243,7 +271,7 @@ for (i in 1:15)
 equityCurve <- cbind(returnsNA[,1], equityCurve)
 colnames(equityCurve)[1] <- "date"
 
-#airlines 7
+#airlines 7 together
 for (i in 1:7)
 {
   names <- list(stock_names)
@@ -255,7 +283,7 @@ for (i in 1:7)
           ylab(names[[1]][i]))  
 }
 
-#beers
+#beers together
 for (i in 1:8)
 {
   names <- list(stock_names)
@@ -337,7 +365,7 @@ for (i in 1:15)
 for (i in 1:15)
 {
   names <- list(stock_names)
-  boxplot(returnsIVV[,i+1], xlab="", main = names[[1]][i])
+  boxplot(returns[,i+1], xlab="", main = names[[1]][i])
 }
 
 
@@ -484,7 +512,6 @@ for (i in 1:15)
 
 table <- data.frame(AIC_t,AIC_sstd,AIC_ged,AIC_n,BIC_t,BIC_sstd,BIC_ged,BIC_n)
 table <- cbind(Stocks, table)
-table
 
 AIC_result <- c("Skewed Sd t", "t Dist", "Ged", "Skewed Sd t", "t Dist", "t Dist", "t Dist", "Skewed Sd t", "t Dist", "t Dist", "Normal", "Skewed Sd t", "Skewed Sd t", "Normal", "t Dist")
 BIC_result <- c("t Dist","t Dist","t Dist","t Dist","t Dist","t Dist","t Dist","t Dist","t Dist","t Dist","Normal","t Dist","t Dist","Normal","t Dist")
@@ -500,13 +527,14 @@ return on a portfolio and $\mu_f$ is the risk-free rate, then
 Sharpe's slope = $\frac{(E(R_P)-\mu_f)}{\sigma_{Rp}}$
 
 ```{r}
-riskfree <- 0.04
+
+risk.free <- 0.45
 
 SharpesSlope <- rep(NA,15)
 
 for (i in 1:15) 
 {
-  SharpesSlope[i] <- (mean(returnsNA[,i+1]) - riskfree)/sd(returnsNA[,i+1])
+  SharpesSlope[i] <- (mean(returnsNA[,i+1]) - risk.free)/sd(returnsNA[,i+1])
 }
 
 #If the analysis results in a negative Sharpe ratio, it either means the risk-free rate is greater than the portfolio's return, or the portfolio's return is expected to be negative. In either case, a negative Sharpe ratio does not convey any useful meaning.
@@ -633,65 +661,6 @@ fit
 
 #loadings are betahat transpose
 #uniquenesses: the diagonal elements of the estimate bigsigma.hat_epsilon
-```
 
-
-
-```{r eval=FALSE, include=FALSE}
-
-returns_df <- returns[2:length(returns)]
-mean_return = colMeans(returns_df,na.rm=TRUE) #Finding the mean return of each stock
-covariance_mat = cov(returns_df) #Finding the covariance of the stocks
-std_vector = sqrt(diag(covariance_mat)) #Finding the std. of the covariance matrix
-
-M = length(returns_df) #The number of stocks included in this analysis, in this case 6
-
-#Setting up environment, following the changes made at page 479
-Amat = cbind(rep(1,M),mean_return,diag(1,nrow=M),-diag(1,nrow=M)) #The Constraint matrix
-muP = seq(min(mean_return)+.001,max(mean_return)-.001,length=15)  #Possible means
-
-sdP = muP  #Standard deviation for portfolio
-
-weights = matrix(0,nrow=300,ncol=M) #The weights
-
-for (i in 1:length(muP))
-{
-  #Assuring that the weights follow the requirement
-  bvec = c(1,muP[i],rep(0,M),rep(0,M)) #Following the example on page 479. 
-  result = solve.QP(Dmat=covariance_mat,
-             dvec=rep(0,M), 
-             Amat=Amat,
-             bvec=bvec, 
-             meq=2) #Finds the min. variance portfolio for every MuP. Creating the efficient frontier.
-  
-  sdP[i] = sqrt(result$value) #Saving results
-  weights[i,] = result$solution  #Saving weights
-}
-plot(sdP,muP,type="l",xlim=c(0,2.5),ylim=c(0,0.15),lty=3) #Plotting the efficient frontier
-
-mu_rf = 3/365 #The risk free rate
-points(0,mu_rf,cex=3,col="blue",pch="*") #Showing the risk free asset
-sharperatio =(muP-mu_rf)/sdP #Computing sharpe ratios
-ind = (sharperatio == max(sharperatio)) #Finds the maximum sharperatio, which locates the Tangent Portfolio
-lines(c(0,sdP[ind]),c(mu_rf,muP[ind]),col="red",lwd=3)  #Showing line of optimal portfolio
-points(sdP[ind],muP[ind],col="red",cex=4,pch="*") #The Tangent portfolio
-ind2 = (sdP == min(sdP)) #The minimum sharpe ratio is the min variance port
-points(sdP[ind2],muP[ind2],col="green",cex=2,pch="*") #Plotting the min variance 
-ind3 = (muP > muP[ind2]) #All portfolios with in efficient frontier
-lines(sdP[ind3],muP[ind3],type="l",xlim=c(0,0.25),
-      ylim=c(0,0.3),col="red",lwd=3) #Efficient frontier 
-
-#plotting all the single stoks
-text(sd_vect[1],mean_vect[1],"Stock: GM")
-text(sd_vect[2],mean_vect[2],"Stock: F")
-text(sd_vect[3],mean_vect[3],"Stock: UTX")
-text(sd_vect[4],mean_vect[4],"Stock: CAT")
-text(sd_vect[5],mean_vect[5],"Stock: MRK")
-text(sd_vect[6],mean_vect[6],"Stock: IBM")
-
-
-#Problem 2
-
-
-
+#when factor=2 
 ```
