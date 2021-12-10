@@ -1,17 +1,17 @@
 ---
-title: "Finance"
+  title: "Finance"
 author: "Barbara, Frederik, Sierra"
 date: "26/11/2021"
 output: pdf_document
 ---
-
+  
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
 **Stocks:**
-Airlines:  
-Lufthansa (German); DLAKY    
+  Airlines:  
+  Lufthansa (German); DLAKY    
 Southwest Airlines; LUV   
 Easy Jet (British); EZJ    
 RyanAir Holdings plc (British); RYAAY    
@@ -20,7 +20,7 @@ American Airlines Group Inc (American); AAL
 Spirit Airlines Inc (American); SAVE  
 
 Beer Industry:  
-Carlsberg (Danish); CABGY
+  Carlsberg (Danish); CABGY
 Heineken (Netherlands); HEINY  
 Anheuser-Busch InBev (Belgium); BUD  
 Harboe (Danish); CPH: HARB-B  
@@ -28,6 +28,8 @@ Guinness from Diageo; DEO
 Molson Coors Brewing; TAP
 Tsingtao Brewery Group; OTCMKTS: TSGTF
 Asahi Group Holding Ltd; OTCMKTS: ASBRF
+
+**Descriptive Analysis**
 
 ```{r include=FALSE}
 
@@ -62,22 +64,22 @@ options("getSymbols.warning4.0"=FALSE)
 options("getSymbols.yahoo.warning"=FALSE)
 
 tickers <- c(
-              'DLAKY',
-             'LUV',
-             'EZJ',
-             'RYAAY',
-             'UAL',
-             'AAL',
-             'SAVE',
-             'CABGY',
-             'HEINY',
-             'BUD',
-             'HARB-B.CO',
-             'DEO',
-             'TAP',
-             'TSGTF',
-             'ASBRF',
-             'IVV'
+  'DLAKY',
+  'LUV',
+  'EZJ',
+  'RYAAY',
+  'UAL',
+  'AAL',
+  'SAVE',
+  'CABGY',
+  'HEINY',
+  'BUD',
+  'HARB-B.CO',
+  'DEO',
+  'TAP',
+  'TSGTF',
+  'ASBRF',
+  'IVV'
 )
 
 stock_names <- c(
@@ -100,7 +102,7 @@ stock_names <- c(
 )
 
 stocks <- data.frame(tickers = tickers,
-                stockname = stock_names)
+                     stockname = stock_names)
 
 ```
 
@@ -122,7 +124,7 @@ returns <- returns[1:131,]
 ```
 
 ***Part 1***
-1. Table of mean, sd, skewness, kurtosis and beta.   
+  1. Table of mean, sd, skewness, kurtosis and beta.   
 
 ```{r}
 
@@ -142,30 +144,30 @@ table <- data.frame(Stocks,Means,Sd,Skewness,Kurtosis)
 # means
 
 for(i in 1:15)
-  {
-    table$Means[i] <- mean(returnsNA[,i+1])
-  }
+{
+  table$Means[i] <- mean(returnsNA[,i+1])
+}
 
 # sd
 
 for(i in 1:15)
-  {
-    table$Sd[i] <- sd(returnsNA[,i+1])
-  }
+{
+  table$Sd[i] <- sd(returnsNA[,i+1])
+}
 
 # skewness should be around 0 to be normally distributed
 
 for(i in 1:15)
-  {
-    table$Skewness[i] <- Skew(returnsNA[,i+1])
-  }
+{
+  table$Skewness[i] <- Skew(returnsNA[,i+1])
+}
 
 # kurtosis should be around 3 to be normally distributed
 
 for(i in 1:15)
-  {
-    table$Kurtosis[i] <- Kurt(returnsNA[,i+1])
-  }
+{
+  table$Kurtosis[i] <- Kurt(returnsNA[,i+1])
+}
 
 # betas 
 #cAPM model, risk free and market portfolio IVV
@@ -181,20 +183,20 @@ for (i in 1:15)
 {
   names <- list(stock_names)
   print(ggplot(returns, aes(x=date, y=returns[,i+1])) +
-  geom_line(color="steelblue") + 
-  geom_point() +
-  xlab("") +
-  ylab(names[[1]][i])+
-  ggtitle("Plot of Returns") + 
-  theme(plot.title = element_text(hjust = 0.5))) 
+          geom_line(color="steelblue") + 
+          geom_point() +
+          xlab("") +
+          ylab(names[[1]][i])+
+          ggtitle("Plot of Returns") + 
+          theme(plot.title = element_text(hjust = 0.5))) 
 }
 
 #united airlines and american airlines
 
 airlines <- returns %>%
-            select(date, UAL, AAL) %>%
-            gather(key="Stocks", value = "Returns", -date)
-  
+  select(date, UAL, AAL) %>%
+  gather(key="Stocks", value = "Returns", -date)
+
 ggplot(airlines, aes(x = date, y = Returns)) + 
   geom_line(aes(color = Stocks)) + 
   scale_color_manual(values = c("skyblue4", "orchid1")) +
@@ -209,8 +211,8 @@ rm(airlines)
 #carslberg and asahi
 
 beers <- returns %>%
-         select(date, CABGY, ASBRF ) %>%
-         gather(key="Stocks", value = "Returns", -date)
+  select(date, CABGY, ASBRF ) %>%
+  gather(key="Stocks", value = "Returns", -date)
 
 ggplot(beers, aes(x = date, y = Returns)) + 
   geom_line(aes(color = Stocks)) + 
@@ -246,11 +248,11 @@ for (i in 1:7)
 {
   names <- list(stock_names)
   print(ggplot(equityCurve, aes(x=date, y=equityCurve[,i+1])) +
-  ggtitle("Equity Curve") +
-  theme(plot.title = element_text(hjust = 0.5))+  
-  geom_line(color="steelblue") + 
-  xlab("") +
-  ylab(names[[1]][i]))  
+          ggtitle("Equity Curve") +
+          theme(plot.title = element_text(hjust = 0.5))+  
+          geom_line(color="steelblue") + 
+          xlab("") +
+          ylab(names[[1]][i]))  
 }
 
 #beers
@@ -258,14 +260,28 @@ for (i in 1:8)
 {
   names <- list(stock_names)
   print(ggplot(equityCurve, aes(x=date, y=equityCurve[,i+7])) +
-  ggtitle("Equity Curve") + 
-  theme(plot.title = element_text(hjust = 0.5)) +  
-  geom_line(color="steelblue") + 
-  xlab("") +
-  ylab(names[[1]][i+7]))  
+          ggtitle("Equity Curve") + 
+          theme(plot.title = element_text(hjust = 0.5)) +  
+          geom_line(color="steelblue") + 
+          xlab("") +
+          ylab(names[[1]][i+7]))  
 }
 
-#need to add legends
+```
+You should also provide an equity curve for each asset (that is, a
+                                                        curve that shows the growth of a $1 in each of the asset over the time period you chose)
+and comment of your results. You should do the same for S&P 500 and compare it with the
+assets.
+
+```{r}
+
+equityCurveSP <- cumprod(1 + returnsNA[,17])
+
+namesair <- names[[1]][1:7]
+namesair <- append(namesair, "SP500")
+
+colors <- c(1,2,3,4,5,6,7,1)
+lt <- c(1,1,1,1,1,1,1,2)
 
 #airlines
 plot(equityCurve[,1], equityCurve[,2], type = "l", ylim= c(0.2,6), xlab="", ylab="Airlines", main="Equity Curves of Airlines")
@@ -273,29 +289,24 @@ for(i in 1:6)
 {
   lines(equityCurve[,1], equityCurve[,i+2], type = "l", col = i+1)
 }
+lines(equityCurve[,1],equityCurveSP,type="l", lty=2, lwd=1, col="black")
 abline(v=as.Date("2020-01-31"), lty=2, col="dimgrey")
-legend(x='topleft', legend=names[[1]][1:7],col=1:7, lty=1, cex=0.8)
+legend(x='topleft', legend=namesair,col=colors, lty=lt, cex=0.8)
 
+####################################################################
+
+colors <- c(1,2,3,4,5,6,7,8,1)
+lt <- c(1,1,1,1,1,1,1,1,2)
 
 #beers
-plot(equityCurve[,1], equityCurve[,9], type = "l", ylim= c(0.4,3), xlab="", ylab="Beers", main="Equity Curves of Beers")
+plot(equityCurve[,1], equityCurve[,9], type = "l", ylim= c(0.4,4), xlab="", ylab="Beers", main="Equity Curves of Beers")
 for(i in 1:7)
 {
   lines(equityCurve[,1], equityCurve[,i+9], type = "l", col = i+1)
 }
+lines(equityCurve[,1],equityCurveSP,type="l", lty=2, lwd=1, col="black")
 abline(v=as.Date("2020-01-31"), lty=2, col="dimgrey")
-legend(x='topleft', legend=names[[1]][8:15],col=1:8, lty=1, cex=0.8)
-
-
-```
-You should also provide an equity curve for each asset (that is, a
-curve that shows the growth of a $1 in each of the asset over the time period you chose)
-and comment of your results. You should do the same for S&P 500 and compare it with the
-assets.
-
-```{r}
-
-returns
+legend(x='topleft', legend=names[[1]][8:16],col=colors, lty=lt, cex=0.8)
 
 ```
 
@@ -308,11 +319,11 @@ for (i in 1:15)
 {
   names <- list(stock_names)
   print(ggplot(returnsNA, aes(x=returnsNA[,i+1])) +
-  geom_histogram(aes(y=..density..), colour="black", fill="white") + 
-  geom_density(alpha=.2, fill="#FF6666")+ 
-  xlab("") +
-  ggtitle(names[[1]][i])+
-  theme(plot.title = element_text(hjust = 0.5)))  
+          geom_histogram(aes(y=..density..), colour="black", fill="white") + 
+          geom_density(alpha=.2, fill="#FF6666")+ 
+          xlab("") +
+          ggtitle(names[[1]][i])+
+          theme(plot.title = element_text(hjust = 0.5)))  
 }
 
 
@@ -330,7 +341,7 @@ for (i in 1:15)
 }
 
 
-returnsbox <- returnsIVV
+returnsbox <- returnsNA
 colnames(returnsbox)[2:16] <- names[[1]]
 colors <- c('cadetblue1', 'coral', 'darkolivegreen1', 'lightgoldenrod1')
 
@@ -348,7 +359,7 @@ boxplot(returnsbox[,9:16], col= colors, main = "Boxplots of Beers")
 
 for (i in 1:15)
 {
-  qqPlot(returns[,i+1], main = names[[1]][i])
+  qqPlot(returnsNA[,i+1], main = names[[1]][i])
 }
 
 
@@ -361,7 +372,7 @@ for (i in 1:15)
 
 for (i in 1:15)
 {
- print(adf.test(returnsNA[,i+1]))
+  print(adf.test(returnsNA[,i+1]))
 }
 
 #all pvalues are less than 0.01 and so p-value<0.05 hence we reject the null hypothesis and conclude that there is enough evidence to conclude that the returns are stationary
@@ -381,7 +392,7 @@ for (i in 1:15)
 
 for (i in 1:15)
 {
- print(shapiro.test(returnsNA[,i+1]))
+  print(shapiro.test(returnsNA[,i+1]))
 }
 
 #normal <- 1,2,3,4,9,10,12,14,8 barely with 0.05991
@@ -390,14 +401,14 @@ for (i in 1:15)
 ```
 
 9. Fit different distributions to your data, which one fits better?
-
+  
 ```{r}
 
 #t distribution
 
 AIC_t <- c(rep(NA), 15)
 BIC_t <- c(rep(NA), 15)
-  
+
 for (i in 1:15) 
 {
   x <- diff(returnsNA[,i+1])
@@ -444,13 +455,13 @@ BIC_ged <- c(rep(NA), 15)
 
 for (i in 1:15)
 {
-x <- diff(returnsNA[,i+1])
-n = length(x)
-loglik_ged = function(beta) sum( - dged(x,mean=beta[1],sd=beta[2],nu=beta[3],log=TRUE) )
-start = c(mean(x),sd(x),1)
-fit_ged = optim(start,loglik_ged,hessian=T,method="L-BFGS-B",lower = c(-.1,.01,1))
-AIC_ged[i] = 2*fit_ged$value+2*4
-BIC_ged[i] = 2*fit_ged$value+log(n)*4
+  x <- diff(returnsNA[,i+1])
+  n = length(x)
+  loglik_ged = function(beta) sum( - dged(x,mean=beta[1],sd=beta[2],nu=beta[3],log=TRUE) )
+  start = c(mean(x),sd(x),1)
+  fit_ged = optim(start,loglik_ged,hessian=T,method="L-BFGS-B",lower = c(-.1,.01,1))
+  AIC_ged[i] = 2*fit_ged$value+2*4
+  BIC_ged[i] = 2*fit_ged$value+log(n)*4
 }
 
 #normal 
@@ -459,14 +470,14 @@ BIC_n <- c(rep(NA), 15)
 
 for (i in 1:15)
 {
-x <- diff(returnsNA[,i+1])
-n = length(x)
-start = c(mean(x),sd(x),1)
-loglik_n = function(beta) sum( - dnorm(x,mean=beta[1],sd=beta[2],log=TRUE) )
-fit_n = optim(start, loglik_n, hessian = T,
-method = "L-BFGS-B", lower = c(-1, 0.001, 1))
-AIC_n[i] = 2 * fit_n$value + 2 * 3
-BIC_n[i] = 2 * fit_n$value + log(n) * 3
+  x <- diff(returnsNA[,i+1])
+  n = length(x)
+  start = c(mean(x),sd(x),1)
+  loglik_n = function(beta) sum( - dnorm(x,mean=beta[1],sd=beta[2],log=TRUE) )
+  fit_n = optim(start, loglik_n, hessian = T,
+                method = "L-BFGS-B", lower = c(-1, 0.001, 1))
+  AIC_n[i] = 2 * fit_n$value + 2 * 3
+  BIC_n[i] = 2 * fit_n$value + log(n) * 3
 }
 
 ########################
@@ -484,7 +495,7 @@ table
 ```
 
 10.  Compute Sharpe’s slope for each asset. Which asset has the highest slope?
-If E(RP) and $\sigma_{R_p}$ are the expected return and standard deviation of the
+  If E(RP) and $\sigma_{R_p}$ are the expected return and standard deviation of the
 return on a portfolio and $\mu_f$ is the risk-free rate, then
 Sharpe's slope = $\frac{(E(R_P)-\mu_f)}{\sigma_{Rp}}$
 
@@ -511,10 +522,10 @@ numbers.
 ```{r}
 #?
 
-annualsamplemeans <- returns[,2:16] *12
+#annualsamplemeans <- returns[,2:16] *12
 
 
-annualsamplesd <- sd(returns[,2:16])*sqrt(12)
+#annualsamplesd <- sd(returns[,2:16])*sqrt(12)
 
 
 
@@ -572,7 +583,61 @@ Correlationsbeers <- Correlations[8:15,8:15]
 ```
 
 
+**PCA**
+
 ```{r}
+library(ggfortify)
+
+#all stocks
+
+pca = prcomp(returnsNA[,2:16], scale = TRUE)
+
+#pc1 and pc2
+autoplot(pca, data=returnsNA[,2:16], loadings=TRUE, loadings.label=TRUE) + ggtitle("1st and 2nd Principal Components of the 15 stocks") + theme(plot.title = element_text(hjust = 0.5))
+
+#pc2 and pc3
+autoplot(pca, data=returnsNA[,2:16], loadings=TRUE, loadings.label=TRUE, x=2, y=3) + ggtitle("2nd and 3rd Principal Components of the 15 stocks") + theme(plot.title = element_text(hjust = 0.5))
+
+summary(pca)
+
+#airlines
+
+pca = prcomp(returnsNA[,2:8], scale = TRUE)
+
+#pc1 and pc2
+autoplot(pca, data=returnsNA[,2:8], loadings=TRUE, loadings.label=TRUE)+ ggtitle("1st and 2nd Principal Components of the Airline stocks") + theme(plot.title = element_text(hjust = 0.5))
+
+#pc2 and pc3
+autoplot(pca, data=returnsNA[,2:8], loadings=TRUE, loadings.label=TRUE, x=2, y=3)+ ggtitle("2nd and 3rd Principal Components of the Airline stocks") + theme(plot.title = element_text(hjust = 0.5))
+
+summary(pca)
+
+#beers
+
+pca = prcomp(returnsNA[,9:16], scale = TRUE)
+
+#pc1 and pc2
+autoplot(pca, data=returnsNA[,9:16], loadings=TRUE, loadings.label=TRUE)+ ggtitle("1st and 2nd Principal Components of the Beer stocks") + theme(plot.title = element_text(hjust = 0.5))
+
+#pc2 and pc3
+autoplot(pca, data=returnsNA[,9:16], loadings=TRUE, loadings.label=TRUE, x=2, y=3)+ggtitle("2nd and 3rd Principal Components of the Beer stocks") + theme(plot.title = element_text(hjust = 0.5))
+
+summary(pca)
+```
+**Factor Models**
+
+```{r}
+
+fit <- factanal(x=returnsNA[2:16], factors = 2)
+fit
+
+#loadings are betahat transpose
+#uniquenesses: the diagonal elements of the estimate bigsigma.hat_epsilon
+```
+
+
+
+```{r eval=FALSE, include=FALSE}
 
 returns_df <- returns[2:length(returns)]
 mean_return = colMeans(returns_df,na.rm=TRUE) #Finding the mean return of each stock
