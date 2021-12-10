@@ -1,4 +1,4 @@
-# Risk Management
+## Risk Management
 100,000
 VaR(0.05)
 ES
@@ -29,11 +29,19 @@ stock_names <- c(
   'Guinness',
   'Molson',
   'Tsingtao',
-  'Asahi',
-  'SP500'
+  'Asahi'
 )
 ```
 
+```{r}
+# read ret_p
+ret_p = read.csv('')
+dim(ret_p)
+head(ret_p)
+```
+
+
+###### Param VaR, ES
 ```{r}
 # param VaR and ES functions on normal distribution
 VaR_norm = function(s0, mu, sigma, alpha) {
@@ -56,7 +64,7 @@ for (i in 1:(dim(data)[2] - 2)) {
 ```
 
 ```{r}
-# VaR, ES for assets
+# param VaR, ES for assets
 VaR_norm_ls = list()
 ES_norm_ls = list()
 for (i in 1:(dim(data)[2] - 2)) {
@@ -66,3 +74,187 @@ for (i in 1:(dim(data)[2] - 2)) {
 }
 ```
 
+```{r}
+# estimate mean and sd for returns of portfolios
+mean_p_vec = rep(NA, dim(ret_p))
+sd_p_vec = rep(NA, dim(ret_p))
+for (i in 1:dim(ret_p)) {
+    mean_p_vec[i] = mean(ret_p[, i])
+    sd_p_vec[i] = sd(ret_p[, i])
+}
+```
+
+```{r}
+# param VaR, ES for portfolios
+VaR_norm_p_ls = list()
+ES_norm_p_ls = list()
+for (i in 1:dim(ret_p)) {
+    name = names(ret_p)
+    VaR_norm_p_ls[[name]] = VaR_norm(100000, mean_p_vec[i], sd_p_vec[i], 0.05)
+    ES_norm_p_ls[[name]] = ES_norm(100000, mean_p_vec[i], sd_p_vec[i], 0.05)
+}
+```
+
+###### Nonparam VaR, ES
+```{r}
+# nonparametric VaR and ER
+VaR <- function(s0, ret, alpha) {
+  return(-s0 * quantile(ret, alpha))
+}
+
+ES <- function(s0, ret, alpha) {
+  return(-s0 * sum(ret[ret < -quantile(ret, alpha)] / length(ret[ret < -quantile(ret, alpha)])))
+}
+```
+
+```{r}
+# nonparam VaR, ES for assets
+VaR_ls = list()
+ES_ls = list()
+for (i in 1:(dim(data)[2] - 2)) {
+    name = stock_names[i]
+    VaR_ls[[name]] = VaR(100000, na.omit(data[, i + 2]), 0.05)
+    ES_ls[[name]] = ES(100000, na.omit(data[, i + 2]), 0.05)
+}
+```
+
+```{r}
+# nonparam VaR, ES for returns of portfolios
+VaR_p_ls = list()
+ES_p_ls = list()
+for (i in 1:dim(ret_p)) {
+    name = names(ret_p)
+    VaR_p_ls[[name]] = VaR(100000, data[, i + 2], 0.05)
+    ES_ls[[name]] = ES(100000, data[, i + 2], 0.05)
+}
+```
+
+Highest VaR: Southwest, EasyJet, RyanAir, Carlsberg, Heineken, AB, Harboe, Guinness, Molson, Asahi
+Lowest VaR: Tsingtao, Spirit, American, United, Lufthansa
+
+###### Boostrap for se, 95% CI for VaR, ES 
+
+```{r}
+# se and 95% CI for VaR, ES of assets using boostrap
+VaR_se = list()
+ES_se = list()
+VaR_CI = list()
+ES_CI = list()
+
+B = 1000
+nsamp = nrow(data)
+# VaR_samp = matrix(NA, B, ncol(data) - 2)
+# ES_samp = matrix(NA, B, ncol(data) - 2)
+
+for (i in 1:(ncol(data) - 2)) {
+    VaR_samp = rep(NA, B)
+    ES_samp = rep(NA, B)
+    for (j in 1:B) {
+        ret_samp = sample(data[, i + 2], size = nsamp, replace = T)
+        VaR_samp[j] = VaR(100000, na.omit(ret_samp), 0.05)
+        ES_samp[j] = ES(100000, na.omit(ret_samp), 0.05)
+    }
+    name = stock_names[i]
+    VaR_se[[name]] = sd(VaR_samp)
+    ES_se[[name]] = sd(ES_samp)
+    VaR_CI[[name]][1] = quantile(VaR_samp, .25)
+    VaR_CI[[name]][2] = quantile(VaR_samp, .975)
+    ES_CI[[name]][1] = quantile(ES_samp, .25)
+    ES_CI[[name]][2] = quantile(ES_samp, .975)
+}
+```
+
+```{r}
+# se and 95% CI for VaR, ES of portfolios using boostrap
+VaR_p_se = list()
+ES_p_se = list()
+VaR_p_CI = list()
+ES_p_CI = list()
+
+B = 1000
+nsamp_p = nrow(ret_p)
+# VaR_samp = matrix(NA, B, ncol(data) - 2)
+# ES_samp = matrix(NA, B, ncol(data) - 2)
+
+for (i in 1:(ncol(ret_p))) {
+    VaR_p_samp = rep(NA, B)
+    ES_p_samp = rep(NA, B)
+    for (j in 1:B) {
+        ret_p_samp = sample(ret_p[, i], size = nsamp_p, replace = T)
+        VaR_p_samp[j] = VaR(100000, na.omit(ret_p_samp), 0.05)
+        ES_p_samp[j] = ES(100000, na.omit(ret_p_samp), 0.05)
+    }
+    name = colnames(ret_p)
+    VaR_p_se[[name]] = sd(VaR_p_samp)
+    ES_p_se[[name]] = sd(ES_p_samp)
+    VaR_p_CI[[name]][1] = quantile(VaRv_samp, .25)
+    VaR_p_CI[[name]][2] = quantile(VaRv_samp, .975)
+    ES_p_CI[[name]][1] = quantile(ES_p_samp, .25)
+    ES_p_CI[[name]][2] = quantile(ES_p_samp, .975)
+}
+```
+
+
+###### Copula
+```{r}
+# set up 
+df = matrix(NA, nrow(data), ncol(data) - 2)
+
+for (i in 1:(ncol(data) - 2)) {
+    df[, i] = rank(data[, i + 2]) / (nrow(data) + 1)
+}
+```
+
+```{r}
+# copulas for assets
+library(copula)
+
+# frank copula 
+cop_f = archmCopula(family = "frank", dim = 15, param = 2)
+ft_f = fitCopula(copula = cop_f, data = df, method = "ml")
+aic_f = AIC(ft_f)
+bic_f = BIC(ft_f)
+
+clayton copula
+cop_cl = archmCopula(family = "clayton", dim = 15, param = 2)
+ft_cl = fitCopula(copula = cop_cl, data = df, method = "ml")
+aic_cl = AIC(ft_cl)
+bic_cl = BIC(ft_cl)
+
+# gumbel copula
+cop_g = archmCopula(family = "gumbel", dim = 15, param = 2)
+ft_g = fitCopula(copula = cop_g, data = df, method = "ml")
+aic_g = AIC(ft_g)
+bic_g = BIC(ft_g)
+
+# joe copula
+cop_j = archmCopula(family = "joe", dim = 15, param = 2)
+ft_j = fitCopula(copula = cop_j, data = df, method = "ml")
+aic_j = AIC(ft_j)
+bic_j = BIC(ft_j)
+
+# t copula
+cop_t = tCopula(param = rep(0, 105), dim = 15, dispstr = "un", df = 15)
+ft_t = fitCopula(copula = cop_t, data = df, method = "ml")
+aic_t = AIC(ft_t)
+bic_t = BIC(ft_t)
+
+# normal copula
+cop_n = normalCopula(param = rep(0, 105), dim = 15, dispstr = "un")
+ft_n = fitCopula(copula = cop_n, data = df, method = "ml")
+aic_n = AIC(ft_n)
+bic_n = BIC(ft_n)
+
+# summary
+data.frame(Copula = c("frank", "clayton", "gumbel", "joe", "t", "normal"), 
+AIC = c(aic_f, aic_cl, aic_g, aic_j, aic_t, aic_n), BIC = c(bic_f, bic_cl, bic_g, bic_j, bic_t, bic_n))
+```
+
+The t copula fits the best since it has the lowest AIC and BIC. 
+ Copula       AIC       BIC
+1   frank -281.1542 -278.2790
+2 clayton -370.9711 -368.0959
+3  gumbel -320.2901 -317.4149
+4     joe -212.8627 -209.9875
+5       t -712.9468 -408.1759
+6  normal -703.7758 -401.8801
