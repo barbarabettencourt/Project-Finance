@@ -1,5 +1,5 @@
 ---
-  title: "Descriptive Analasys and PCA"
+  title: "Descriptive Analysis, PCA and Factor Model"
 author: "Barbara Bettencourt"
 date: "26/11/2021"
 output: pdf_document
@@ -32,6 +32,7 @@ Asahi Group Holding Ltd; OTCMKTS: ASBRF
 **Descriptive Analysis**
 
 ```{r include=FALSE}
+#libraries
 
 library(tidyquant)
 library(purrr)
@@ -53,11 +54,9 @@ library(QRM)
 library("Ecdat")
 library("fGarch")
 
-
-
 ```
 
-This is how we collected the original data, however, somehow some of the Asahi returns disappeared, so we use the data.csv file (the original data).
+This is how we collected the data originally, however, somehow some of the Asahi returns disappeared after I've written most of this code, so we use the data.csv file (the original data). The returns changed on the 10th of December.
 
 ```{r include=FALSE}
 
@@ -109,33 +108,37 @@ stocks <- data.frame(tickers = tickers,
 
 ```{r}
 
-returns1 <- tq_get(tickers, get="stock.prices") %>%
+returns <- tq_get(tickers, get="stock.prices") %>%
   group_by(symbol) %>%
   tq_transmute(select=adjusted,
                mutate_fun=periodReturn,
                period="monthly",
                col_rename = "monthly_return")
 
-returns1 <- returns1 %>% 
+returns <- returns %>% 
   pivot_wider(names_from = symbol, values_from = monthly_return)
 
-#monthly returns
-returns1 <- returns1[1:131,]
+#deleted a bunch of NA Values
+returns <- returns[1:131,]
 
 ```
 
 ```{r}
+#here i replace the entire data that was collected online with the data.csv file as it is the only way my code would work again after the sudden change in the online returns
+
 returns3 <- read.csv('https://raw.githubusercontent.com/barbarabettencourt/Project-Finance/main/data/data.csv')
 returns3 <- returns3[2:17]
 
-returns1[,2:16] <- returns3[,2:16]
+returns[,2:16] <- returns3[,2:16]
+```
 
-returns <- returns1
+```{r include=FALSE}
+rm(returns3);rm(tickers)
 ```
 
 
-***Part 1***
-  1. Table of mean, sd, skewness, kurtosis and beta.   
+**Descriptive Analysis**
+1. Table of mean, sd, skewness, kurtosis and betas.   
 
 ```{r}
 
@@ -150,7 +153,6 @@ Skewness <- rep(NA,15)
 Kurtosis <- rep(NA,15)
 Betas <- rep(NA,15)
 table <- data.frame(Stocks,Means,Sd,Skewness,Kurtosis,Betas)
-
 
 # means
 
@@ -180,8 +182,7 @@ for(i in 1:15)
   table$Kurtosis[i] <- Kurt(returnsNA[,i+1])
 }
 
-# betas 
-#riskfree rate is 0.45
+# betas using riskfree rate of 0.45 with SML
 
 risk.free <- rep(0.45,113)
 
@@ -192,8 +193,6 @@ for (i in 1:15)
   regressions[[i]] <- lm((returnsNA[,i+1]-risk.free)~(returnsNA[,17]-risk.free))  
 }
 
-regressions[[3]][[1]][2]
-
 
 for(i in 1:15)
 {
@@ -201,16 +200,23 @@ for(i in 1:15)
 }
 
 table
+
 ```
+```{r include=FALSE}
+rm(Betas);rm(regressions);rm(i);rm(Kurtosis);rm(Means);rm(risk.free);rm(Sd);rm(Skewness)
+```
+
 
 2. Plot each set of returns  
 
 ```{r}
 
+# Individual stocks
+
 for (i in 1:15)
 {
   names <- list(stock_names)
-  print(ggplot(returns1, aes(x=date, y=returns[,i+1])) +
+  print(ggplot(returns, aes(x=date, y=returns[,i+1])) +
           geom_line(color="steelblue") + 
           geom_point() +
           xlab("") +
@@ -219,7 +225,7 @@ for (i in 1:15)
           theme(plot.title = element_text(hjust = 0.5))) 
 }
 
-#united airlines and american airlines
+# United airlines and American airlines
 
 airlines <- returns %>%
   select(date, UAL, AAL) %>%
@@ -236,7 +242,7 @@ ggplot(airlines, aes(x = date, y = Returns)) +
 
 rm(airlines)
 
-#carslberg and asahi
+# Carslberg and Asahi
 
 beers <- returns %>%
   select(date, CABGY, ASBRF ) %>%
@@ -254,24 +260,22 @@ ggplot(beers, aes(x = date, y = Returns, group=1)) +
 
 rm(beers)
 ```
-3. Plot equity curve  
-https://bookdown.org/compfinezbook/introcompfinr/ReturnCalculationsR.html#
+3. Plot equity curve
 
 ```{r}
 
 returnsNA <- as.data.frame(na.omit(returns))   #doesn't work with NA values
 
-equityCurve <- as.data.frame(matrix(c(rep(NA,113*15)), nrow= 113)) 
+equityCurve <- as.data.frame(matrix(c(rep(NA,113*15)), nrow= 113))
 for (i in 1:15) 
 {  
   equityCurve[,i] <- cumprod(1 + returnsNA[,i+1]) 
 }
 
-
-equityCurve <- cbind(returnsNA[,1], equityCurve)
+equityCurve <- cbind(returnsNA[,1], equityCurve) #adding date to dataframe
 colnames(equityCurve)[1] <- "date"
 
-#airlines 7 together
+#airlines individual
 for (i in 1:7)
 {
   names <- list(stock_names)
@@ -283,7 +287,7 @@ for (i in 1:7)
           ylab(names[[1]][i]))  
 }
 
-#beers together
+#beers individual
 for (i in 1:8)
 {
   names <- list(stock_names)
@@ -296,14 +300,11 @@ for (i in 1:8)
 }
 
 ```
-You should also provide an equity curve for each asset (that is, a
-                                                        curve that shows the growth of a $1 in each of the asset over the time period you chose)
-and comment of your results. You should do the same for S&P 500 and compare it with the
-assets.
+3.2 You should also provide an equity curve for each asset (that is, a curve that shows the growth of a $1 in each of the asset over the time period you chose) and comment of your results. You should do the same for S&P 500 and compare it with the assets.
 
 ```{r}
 
-equityCurveSP <- cumprod(1 + returnsNA[,17])
+equityCurveSP <- cumprod(1 + returnsNA[,17]) #equity curve for SP500
 
 namesair <- names[[1]][1:7]
 namesair <- append(namesair, "SP500")
@@ -311,7 +312,7 @@ namesair <- append(namesair, "SP500")
 colors <- c(1,2,3,4,5,6,7,1)
 lt <- c(1,1,1,1,1,1,1,2)
 
-#airlines
+#airlines together with SP
 plot(equityCurve[,1], equityCurve[,2], type = "l", ylim= c(0.2,6), xlab="", ylab="Airlines", main="Equity Curves of Airlines")
 for(i in 1:6)
 {
@@ -326,7 +327,7 @@ legend(x='topleft', legend=namesair,col=colors, lty=lt, cex=0.8)
 colors <- c(1,2,3,4,5,6,7,8,1)
 lt <- c(1,1,1,1,1,1,1,1,2)
 
-#beers
+#beers together with SP
 plot(equityCurve[,1], equityCurve[,9], type = "l", ylim= c(0.4,4), xlab="", ylab="Beers", main="Equity Curves of Beers")
 for(i in 1:7)
 {
@@ -337,7 +338,9 @@ abline(v=as.Date("2020-01-31"), lty=2, col="dimgrey")
 legend(x='topleft', legend=names[[1]][8:16],col=colors, lty=lt, cex=0.8)
 
 ```
-
+```{r}
+rm(equityCurve);rm(colors);rm(equityCurveSP);rm(lt);rm(namesair)
+```
 
 4. Histograms for each return series  
 
@@ -354,7 +357,6 @@ for (i in 1:15)
           theme(plot.title = element_text(hjust = 0.5)))  
 }
 
-
 ```
 5. Boxplots for each return series  
 
@@ -368,7 +370,6 @@ for (i in 1:15)
   boxplot(returns[,i+1], xlab="", main = names[[1]][i])
 }
 
-
 returnsbox <- returnsNA
 colnames(returnsbox)[2:16] <- names[[1]]
 colors <- c('cadetblue1', 'coral', 'darkolivegreen1', 'lightgoldenrod1')
@@ -380,6 +381,10 @@ boxplot(returnsbox[,2:8], col = colors, main= "Boxplots of Airlines")
 boxplot(returnsbox[,9:16], col= colors, main = "Boxplots of Beers")
 
 ```
+```{r include=FALSE}
+rm(returnsbox);rm(colors)
+```
+
 
 6. qqplots for each return series  
 
@@ -390,13 +395,11 @@ for (i in 1:15)
   qqPlot(returnsNA[,i+1], main = names[[1]][i])
 }
 
-
 ```
 
 7. Run tests for stationarity  
 
 ```{r}
-#null hypothesis is series is non stationary
 
 for (i in 1:15)
 {
@@ -405,26 +408,21 @@ for (i in 1:15)
 
 #all pvalues are less than 0.01 and so p-value<0.05 hence we reject the null hypothesis and conclude that there is enough evidence to conclude that the returns are stationary
 
-#graphically we can see that all the returns have no trends and the oscillations between the returns seem to be at a constant width, so constant deviation. All pointing towards stationarity.
-
 ```
 
 8. Check if returns are normally distributed
 
 ```{r}
 
-#From the histograms the returns appear to have the normal distribution shape, where most of them appear unimodal. There appears to be a few that are skewed, which can also be observed in the boxplots.
-#Looking at the qqplots we can see a few of the returns have values outside the interval which means they are not normally distributed. 
-#lastly we do the Shapiro test
-#null hypothesis: normal 
-
 for (i in 1:15)
 {
   print(shapiro.test(returnsNA[,i+1]))
 }
 
-#normal <- 1,2,3,4,9,10,12,14,8 barely with 0.05991
-#not normal <- 5,6,7,11,13,15
+#results
+
+#normal stocks <- 1,2,3,4,9,10,12,14,8 barely with 0.05991
+#not normal stocks <- 5,6,7,11,13,15
 
 ```
 
@@ -449,7 +447,7 @@ for (i in 1:15)
 }
 
 #skewed student t
-#not work: Harboe=11 
+#doesnt work for Harboe (11) 
 
 AIC_sstd <- c(rep(NA), 15)
 BIC_sstd <- c(rep(NA), 15)
@@ -508,25 +506,30 @@ for (i in 1:15)
   BIC_n[i] = 2 * fit_n$value + log(n) * 3
 }
 
-########################
+################################################################################
 
-table <- data.frame(AIC_t,AIC_sstd,AIC_ged,AIC_n,BIC_t,BIC_sstd,BIC_ged,BIC_n)
-table <- cbind(Stocks, table)
+table2 <- data.frame(AIC_t,AIC_sstd,AIC_ged,AIC_n,BIC_t,BIC_sstd,BIC_ged,BIC_n)
+table2 <- cbind(Stocks, table2)
 
 AIC_result <- c("Skewed Sd t", "t Dist", "Ged", "Skewed Sd t", "t Dist", "t Dist", "t Dist", "Skewed Sd t", "t Dist", "t Dist", "Normal", "Skewed Sd t", "Skewed Sd t", "Normal", "t Dist")
 BIC_result <- c("t Dist","t Dist","t Dist","t Dist","t Dist","t Dist","t Dist","t Dist","t Dist","t Dist","Normal","t Dist","t Dist","Normal","t Dist")
 
-table <- cbind(table, AIC_result, BIC_result)
-colnames(table)[2:11] <- c("t AIC", "Skewed t AIC", "Ged AIC", "Normal AIC", "t BIC", "Skewed t BIC", "Ged BIC", "Normal BIC", "Best AIC", "Best BIC")
-table
+table2 <- cbind(table2, AIC_result, BIC_result)
+colnames(table2)[2:11] <- c("t AIC", "Skewed t AIC", "Ged AIC", "Normal AIC", "t BIC", "Skewed t BIC", "Ged BIC", "Normal BIC", "Best AIC", "Best BIC")
+
+table2
+```
+```{r include=FALSE}
+rm(AIC_ged);rm(AIC_n);rm(AIC_result);rm(AIC_sstd);rm(AIC_t);rm(BIC_ged);rm(BIC_n);rm(BIC_result);rm(BIC_sstd);rm(BIC_t);rm(fit_ged);rm(fit_n);rm(fit_sstd);rm(fit_t);rm(table2);rm(n);rm(start);rm(x);rm(loglik_ged);rm(loglik_n);rm(loglik_sstd);rm(loglik_t);rm(Stocks)
 ```
 
-10.  Compute Sharpe’s slope for each asset. Which asset has the highest slope?
-  If E(RP) and $\sigma_{R_p}$ are the expected return and standard deviation of the
-return on a portfolio and $\mu_f$ is the risk-free rate, then
+
+10.  Compute Sharpe’s slope for each asset. Which asset has the highest slope?   
+If E(RP) and $\sigma_{R_p}$ are the expected return and standard deviation of the return on a portfolio and $\mu_f$ is the risk-free rate, then
 Sharpe's slope = $\frac{(E(R_P)-\mu_f)}{\sigma_{Rp}}$
 
 ```{r}
+#risk free given by Professor = 0.45
 
 risk.free <- 0.45
 
@@ -537,27 +540,54 @@ for (i in 1:15)
   SharpesSlope[i] <- (mean(returnsNA[,i+1]) - risk.free)/sd(returnsNA[,i+1])
 }
 
-#If the analysis results in a negative Sharpe ratio, it either means the risk-free rate is greater than the portfolio's return, or the portfolio's return is expected to be negative. In either case, a negative Sharpe ratio does not convey any useful meaning.
-
 SharpesSlope
+
+#If the results have all negative Sharpe ratio, it either means the risk-free rate is greater than the portfolio's return (which is the case here), or the portfolio's return is expected to be negative. In either case, a negative Sharpe ratio does not convey any useful meaning.
+
 max(SharpesSlope) #highest slope
 
 ```
+```{r include=FALSE}
+rm(SharpesSlope)
+```
+
 
 11. Convert the monthly sample means into annual estimates by multiplying by 12 and convert the monthly sample SDs into annual estimates by multiplying by the square root of 12. Comment on the values of these annual
 numbers.
 
 ```{r}
-#?
+#annual means
 
-#annualsamplemeans <- returns[,2:16] *12
+annualsamplesmeans <- rep(NA,15)
 
+for (i in 1:15) 
+{
+  annualsamplesmeans[i] <- mean(returnsNA[,i+1])*12
 
-#annualsamplesd <- sd(returns[,2:16])*sqrt(12)
+}
 
+diffmeans <- cbind(annualsamplesmeans, table$Means)
+diffmeans
+
+#annual sd
+
+annualsamplesd <- rep(NA,15)
+
+for (i in 1:15) 
+{
+  annualsamplesd[i] <- sd(returnsNA[,i+1])*sqrt(12)
+
+}
+
+diffsd <- cbind(annualsamplesd, table$Sd)
+diffsd
 
 
 ```
+```{r include=FALSE}
+rm(annualsamplesd);rm(annualsamplesmeans);rm(diffmeans);rm(diffsd)
+```
+
 
 12. Construct pairwise scatter plots between your assets returns and comment on
 any relationships you see.
@@ -596,26 +626,31 @@ Covariancesannual <- as.data.frame(cov(annualreturns[1:15]))
 Covariancesairannual <- Covariancesannual[1:7,1:7]
 Covariancesbeersannual <- Covariancesannual[8:15,8:15]
 
+###############################################################################
 
-#########################
 #correlation for monthly data
 
 Correlations <- as.data.frame(cor(returnsNA[2:16]))
 
-#they all have positive covariances hence the returns all move together, vary in the same direction.
-
 Correlationsair <- Correlations[1:7,1:7]
 Correlationsbeers <- Correlations[8:15,8:15]
 
+```
+
+```{r include=FALSE}
+rm(Correlations);rm(Correlationsair);rm(Correlationsbeers);rm(Covariances);rm(Covariancesair);rm(Covariancesbeers);rm(Covariancesannual);rm(annualreturns);rm(Covariancesbeersannual);rm(Covariancesairannual)
 
 ```
 
 
 **PCA**
 
-```{r}
+```{r include=FALSE}
 library(ggfortify)
+```
 
+
+```{r}
 #all stocks
 
 pca = prcomp(returnsNA[,2:16], scale = TRUE)
@@ -652,6 +687,11 @@ autoplot(pca, data=returnsNA[,9:16], loadings=TRUE, loadings.label=TRUE, x=2, y=
 
 summary(pca)
 ```
+```{r include=FALSE}
+rm(pca)
+```
+
+
 **Factor Models**
 
 ```{r}
@@ -659,8 +699,9 @@ summary(pca)
 fit <- factanal(x=returnsNA[2:16], factors = 2)
 fit
 
-#loadings are betahat transpose
+#loadings are beta.hat transpose
 #uniquenesses: the diagonal elements of the estimate bigsigma.hat_epsilon
 
-#when factor=2 
+#when we have two factors it appears that the airlines were grouped into factor 1 and the beers grouped in factor 2.
+
 ```
