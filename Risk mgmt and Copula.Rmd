@@ -45,19 +45,19 @@ head(ret_p)
 ```{r}
 # param VaR and ES functions on normal distribution
 VaR_norm = function(s0, mu, sigma, alpha) {
-    return( -s0 + sigma * qnorm(alpha) )
+    return( -s0 * ( mu + sigma * qnorm(alpha) ))
 }
 
 ES_norm = function(s0, mu, sigma, alpha) {
-    return( -s0 * ( -mu + sigma * ( pnorm( qnorm(alpha) ) / alpha ) ) )
+    return( s0 * ( -mu + sigma * ( pnorm( qnorm(alpha) ) / alpha ) ) )
 }
 ```
 
 ```{r}
 # estimate mean and sd
-mean_vec = rep(NA, dim(data)[2] - 2)
-sd_vec = rep(NA, dim(data)[2] - 2)
-for (i in 1:(dim(data)[2] - 2)) {
+mean_vec = rep(NA, ncol(data) - 2)
+sd_vec = rep(NA, ncol(data) - 2)
+for (i in 1:(ncol(data) - 2)) {
     mean_vec[i] = mean(na.omit(data[, i + 2]))
     sd_vec[i] = sd(na.omit(data[, i + 2]))
 }
@@ -73,6 +73,9 @@ for (i in 1:(dim(data)[2] - 2)) {
     ES_norm_ls[[name]] = ES_norm(100000, mean_vec[i], sd_vec[i], 0.05)
 }
 ```
+
+Highest param VaR: American (21252.48), lowest param VaR: Guinnes (6416.28).
+Highest param ES: American (12401.26), lowest param ES: Guinness (3470.6).
 
 ```{r}
 # estimate mean and sd for returns of portfolios
@@ -103,7 +106,7 @@ VaR <- function(s0, ret, alpha) {
 }
 
 ES <- function(s0, ret, alpha) {
-  return(-s0 * sum(ret[ret < -quantile(ret, alpha)] / length(ret[ret < -quantile(ret, alpha)])))
+    return(-s0 * sum(ret[ret < quantile(ret, alpha)]) / length(ret[ret < quantile(ret, alpha)]))
 }
 ```
 
@@ -118,6 +121,9 @@ for (i in 1:(dim(data)[2] - 2)) {
 }
 ```
 
+Highest nonparam VaR: Lufthansa (17257.03), lowest nonparam VaR: Guinness (6591.676).
+Highest nonparam ES: Spirit (25358.96), lowest nonparam ES: Guinness (8284.902).
+
 ```{r}
 # nonparam VaR, ES for returns of portfolios
 VaR_p_ls = list()
@@ -129,8 +135,7 @@ for (i in 1:dim(ret_p)) {
 }
 ```
 
-Highest VaR: Southwest, EasyJet, RyanAir, Carlsberg, Heineken, AB, Harboe, Guinness, Molson, Asahi
-Lowest VaR: Tsingtao, Spirit, American, United, Lufthansa
+
 
 ###### Boostrap for se, 95% CI for VaR, ES 
 
@@ -157,10 +162,10 @@ for (i in 1:(ncol(data) - 2)) {
     name = stock_names[i]
     VaR_se[[name]] = sd(VaR_samp)
     ES_se[[name]] = sd(ES_samp)
-    VaR_CI[[name]][1] = quantile(VaR_samp, .25)
-    VaR_CI[[name]][2] = quantile(VaR_samp, .975)
-    ES_CI[[name]][1] = quantile(ES_samp, .25)
-    ES_CI[[name]][2] = quantile(ES_samp, .975)
+    VaR_CI[[name]][1] = quantile(VaR_samp, .25, na.rm = T)
+    VaR_CI[[name]][2] = quantile(VaR_samp, .975, na.rm = T)
+    ES_CI[[name]][1] = quantile(ES_samp, .25, na.rm = T)
+    ES_CI[[name]][2] = quantile(ES_samp, .975, na.rm = T)
 }
 ```
 
@@ -251,6 +256,7 @@ AIC = c(aic_f, aic_cl, aic_g, aic_j, aic_t, aic_n), BIC = c(bic_f, bic_cl, bic_g
 ```
 
 The t copula fits the best since it has the lowest AIC and BIC. 
+
  Copula       AIC       BIC
 1   frank -281.1542 -278.2790
 2 clayton -370.9711 -368.0959
@@ -258,3 +264,4 @@ The t copula fits the best since it has the lowest AIC and BIC.
 4     joe -212.8627 -209.9875
 5       t -712.9468 -408.1759
 6  normal -703.7758 -401.8801
+
