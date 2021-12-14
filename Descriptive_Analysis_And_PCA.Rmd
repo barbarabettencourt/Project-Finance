@@ -148,18 +148,24 @@ returnsNA <- as.data.frame(na.omit(returns))
 # columns of table
 Stocks <- stock_names[1:15]
 Means <- rep(NA, 15)
+Means2 <- rep(NA,15)
 Sd <- rep(NA,15)
 Skewness <- rep(NA,15)
 Kurtosis <- rep(NA,15)
 Betas <- rep(NA,15)
-table <- data.frame(Stocks,Means,Sd,Skewness,Kurtosis,Betas)
+SharpesSlope <- rep(NA,15)
+table <- data.frame(Stocks,Means,Means2,Sd,Skewness,Kurtosis,Betas,SharpesSlope)
 
-# means
+# montly means
 
 for(i in 1:15)
 {
   table$Means[i] <- mean(returnsNA[,i+1])
 }
+
+# annual means
+
+table$Means2 <- table$Means*12
 
 # sd
 
@@ -184,7 +190,7 @@ for(i in 1:15)
 
 # betas using riskfree rate of 0.45 with SML
 
-risk.free <- rep(0.45,113)
+risk.free <- rep(0.45/100/12,113)
 
 regressions <- vector("list",15)
 
@@ -193,11 +199,24 @@ for (i in 1:15)
   regressions[[i]] <- lm((returnsNA[,i+1]-risk.free)~(returnsNA[,17]-risk.free))  
 }
 
-
 for(i in 1:15)
 {
   table$Betas[i] <- regressions[[i]][[1]][2]
 }
+
+# Sharpe Slope
+
+risk.free <- 0.45/100/12
+
+for (i in 1:15) 
+{
+  table$SharpesSlope[i] <- (mean(returnsNA[,i+1]) - risk.free)/sd(returnsNA[,i+1])
+}
+
+# renaming columns
+colnames(table)[2] <- "Monthly Means"
+colnames(table)[3] <- "Annual Means"
+colnames(table)[8] <- "Sharpe's Slope"
 
 table
 
@@ -529,9 +548,9 @@ If E(RP) and $\sigma_{R_p}$ are the expected return and standard deviation of th
 Sharpe's slope = $\frac{(E(R_P)-\mu_f)}{\sigma_{Rp}}$
 
 ```{r}
-#risk free given by Professor = 0.45
+#annual risk free given by Professor = 0.45
 
-risk.free <- 0.45
+risk.free <- 0.45/100/12
 
 SharpesSlope <- rep(NA,15)
 
