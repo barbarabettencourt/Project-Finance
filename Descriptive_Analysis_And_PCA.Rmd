@@ -279,6 +279,7 @@ ggplot(beers, aes(x = date, y = Returns, group=1)) +
 
 rm(beers)
 ```
+
 3. Plot equity curve
 
 ```{r}
