@@ -1,16 +1,7 @@
 ## Risk Management
-100,000
-VaR(0.05)
-ES
-over one month
-normal dist
-estimated means and vars
-do nonparametric additionally
-comment: highest lowest VaR and ES assets
-bootstrap to estimate se and 95% CI for VaR(0.05) and ES
 
 ```{r}
-# read data
+# read data for returns of stocks
 data = read.csv('data.csv')
 dim(data)
 head(data)
@@ -34,10 +25,12 @@ stock_names <- c(
 ```
 
 ```{r}
-# read ret_p
-ret_p = read.csv('')
+# read data for returns of the portfolios
+ret_p = read.csv('portfolios.csv')
 dim(ret_p)
 head(ret_p)
+ret_p = ret_p[, 2:19]
+dim(ret_p)
 ```
 
 
@@ -54,7 +47,7 @@ ES_norm = function(s0, mu, sigma, alpha) {
 ```
 
 ```{r}
-# estimate mean and sd
+# estimate mean and sd for stock returns
 mean_vec = rep(NA, ncol(data) - 2)
 sd_vec = rep(NA, ncol(data) - 2)
 for (i in 1:(ncol(data) - 2)) {
@@ -64,7 +57,7 @@ for (i in 1:(ncol(data) - 2)) {
 ```
 
 ```{r}
-# param VaR, ES for assets
+# param VaR, ES for stock returns
 VaR_norm_ls = list()
 ES_norm_ls = list()
 for (i in 1:(dim(data)[2] - 2)) {
@@ -74,25 +67,22 @@ for (i in 1:(dim(data)[2] - 2)) {
 }
 ```
 
-Highest param VaR: American (21252.48), lowest param VaR: Guinnes (6416.28).
-Highest param ES: American (12401.26), lowest param ES: Guinness (3470.6).
-
 ```{r}
 # estimate mean and sd for returns of portfolios
-mean_p_vec = rep(NA, dim(ret_p))
-sd_p_vec = rep(NA, dim(ret_p))
-for (i in 1:dim(ret_p)) {
+mean_p_vec = rep(NA, ncol(ret_p))
+sd_p_vec = rep(NA, ncol(ret_p))
+for (i in 1:ncol(ret_p)) {
     mean_p_vec[i] = mean(ret_p[, i])
     sd_p_vec[i] = sd(ret_p[, i])
 }
 ```
 
 ```{r}
-# param VaR, ES for portfolios
+# param VaR, ES for portfolio returns
 VaR_norm_p_ls = list()
 ES_norm_p_ls = list()
-for (i in 1:dim(ret_p)) {
-    name = names(ret_p)
+for (i in 1:ncol(ret_p)) {
+    name = names(ret_p)[i]
     VaR_norm_p_ls[[name]] = VaR_norm(100000, mean_p_vec[i], sd_p_vec[i], 0.05)
     ES_norm_p_ls[[name]] = ES_norm(100000, mean_p_vec[i], sd_p_vec[i], 0.05)
 }
@@ -100,7 +90,7 @@ for (i in 1:dim(ret_p)) {
 
 ###### Nonparam VaR, ES
 ```{r}
-# nonparametric VaR and ER
+# nonparametric VaR and ER functions
 VaR <- function(s0, ret, alpha) {
   return(-s0 * quantile(ret, alpha))
 }
@@ -111,7 +101,7 @@ ES <- function(s0, ret, alpha) {
 ```
 
 ```{r}
-# nonparam VaR, ES for assets
+# nonparam VaR, ES for stock returns
 VaR_ls = list()
 ES_ls = list()
 for (i in 1:(dim(data)[2] - 2)) {
@@ -121,17 +111,15 @@ for (i in 1:(dim(data)[2] - 2)) {
 }
 ```
 
-Highest nonparam VaR: Lufthansa (17257.03), lowest nonparam VaR: Guinness (6591.676).
-Highest nonparam ES: Spirit (25358.96), lowest nonparam ES: Guinness (8284.902).
 
 ```{r}
 # nonparam VaR, ES for returns of portfolios
 VaR_p_ls = list()
 ES_p_ls = list()
-for (i in 1:dim(ret_p)) {
-    name = names(ret_p)
-    VaR_p_ls[[name]] = VaR(100000, data[, i + 2], 0.05)
-    ES_ls[[name]] = ES(100000, data[, i + 2], 0.05)
+for (i in 1:ncol(ret_p)) {
+    name = names(ret_p)[i]
+    VaR_p_ls[[name]] = VaR(100000, ret_p[, i], 0.05)
+    ES_p_ls[[name]] = ES(100000, ret_p[, i], 0.05)
 }
 ```
 
@@ -140,7 +128,7 @@ for (i in 1:dim(ret_p)) {
 ###### Boostrap for se, 95% CI for VaR, ES 
 
 ```{r}
-# se and 95% CI for VaR, ES of assets using boostrap
+# se and 95% CI for VaR, ES of stock returns using boostrap
 VaR_se = list()
 ES_se = list()
 VaR_CI = list()
@@ -148,8 +136,6 @@ ES_CI = list()
 
 B = 1000
 nsamp = nrow(data)
-# VaR_samp = matrix(NA, B, ncol(data) - 2)
-# ES_samp = matrix(NA, B, ncol(data) - 2)
 
 for (i in 1:(ncol(data) - 2)) {
     VaR_samp = rep(NA, B)
@@ -170,7 +156,7 @@ for (i in 1:(ncol(data) - 2)) {
 ```
 
 ```{r}
-# se and 95% CI for VaR, ES of portfolios using boostrap
+# se and 95% CI for VaR, ES of portfolio returns using boostrap
 VaR_p_se = list()
 ES_p_se = list()
 VaR_p_CI = list()
@@ -178,8 +164,6 @@ ES_p_CI = list()
 
 B = 1000
 nsamp_p = nrow(ret_p)
-# VaR_samp = matrix(NA, B, ncol(data) - 2)
-# ES_samp = matrix(NA, B, ncol(data) - 2)
 
 for (i in 1:(ncol(ret_p))) {
     VaR_p_samp = rep(NA, B)
@@ -189,20 +173,20 @@ for (i in 1:(ncol(ret_p))) {
         VaR_p_samp[j] = VaR(100000, na.omit(ret_p_samp), 0.05)
         ES_p_samp[j] = ES(100000, na.omit(ret_p_samp), 0.05)
     }
-    name = colnames(ret_p)
+    name = colnames(ret_p)[i]
     VaR_p_se[[name]] = sd(VaR_p_samp)
     ES_p_se[[name]] = sd(ES_p_samp)
-    VaR_p_CI[[name]][1] = quantile(VaRv_samp, .25)
-    VaR_p_CI[[name]][2] = quantile(VaRv_samp, .975)
-    ES_p_CI[[name]][1] = quantile(ES_p_samp, .25)
-    ES_p_CI[[name]][2] = quantile(ES_p_samp, .975)
+    VaR_p_CI[[name]][1] = quantile(VaR_p_samp, .25, na.rm = T)
+    VaR_p_CI[[name]][2] = quantile(VaR_p_samp, .975, na.rm = T)
+    ES_p_CI[[name]][1] = quantile(ES_p_samp, .25, na.rm = T)
+    ES_p_CI[[name]][2] = quantile(ES_p_samp, .975, na.rm = T)
 }
 ```
 
 
 ###### Copula
 ```{r}
-# set up 
+# set up for copula
 df = matrix(NA, nrow(data), ncol(data) - 2)
 
 for (i in 1:(ncol(data) - 2)) {
@@ -211,7 +195,7 @@ for (i in 1:(ncol(data) - 2)) {
 ```
 
 ```{r}
-# copulas for assets
+# copulas for stock returns
 library(copula)
 
 # frank copula 
@@ -250,7 +234,7 @@ ft_n = fitCopula(copula = cop_n, data = df, method = "ml")
 aic_n = AIC(ft_n)
 bic_n = BIC(ft_n)
 
-# summary
+# summary of copulas and AIC, BIC
 data.frame(Copula = c("frank", "clayton", "gumbel", "joe", "t", "normal"), 
 AIC = c(aic_f, aic_cl, aic_g, aic_j, aic_t, aic_n), BIC = c(bic_f, bic_cl, bic_g, bic_j, bic_t, bic_n))
 ```
